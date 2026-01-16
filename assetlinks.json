@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.kofpack.twa",
+        "sha256_cert_fingerprints": ["6F:C0:9D:8B:67:2C:29:F5:2B:1A:C6:DD:62:2B:94:67:02:10:04:90:08:AC:54:AF:4E:76:EF:96:17:DD:43:9D"]
+      }
+    }]
