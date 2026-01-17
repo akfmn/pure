@@ -1,627 +1,752 @@
-// ============================================
-// РЕДАКТИРОВАНИЕ ПРОФИЛЯ
-// ============================================
+/* ============================================
+   PROFILE - User Profile View Styles
+   ============================================ */
 
-// Открытие экрана редактирования (вызывается в showScreen)
-function initEditProfile() {
-    if (!currentUser) return;
-    
-    // Заполняем текущие данные
-    document.getElementById('editName').value = currentUser.name || '';
-    document.getElementById('editBirthdate').value = currentUser.birthdate || '';
-    
-    // Заполняем bio
-    const bioTextarea = document.getElementById('editBio');
-    bioTextarea.value = currentUser.bio || '';
-    document.getElementById('editBioCount').textContent = bioTextarea.value.length;
-    bioTextarea.oninput = function() {
-        document.getElementById('editBioCount').textContent = this.value.length;
-    };
-    
-    // Устанавливаем максимальную дату (18 лет назад)
-    const today = new Date();
-    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-    document.getElementById('editBirthdate').max = maxDate.toISOString().split('T')[0];
-    
-    // Заполняем список стран
-    const countrySelect = document.getElementById('editCountry');
-    countrySelect.innerHTML = '<option value="">Выберите страну</option>';
-    Object.keys(countriesData).sort().forEach(country => {
-        const option = document.createElement('option');
-        option.value = country;
-        option.textContent = country;
-        if (country === currentUser.country) {
-            option.selected = true;
-        }
-        countrySelect.appendChild(option);
-    });
-    
-    // Загружаем города текущей страны
-    loadEditCities();
-    
-    // Устанавливаем аватар
-    selectedAvatar = currentUser.avatar || '👤';
-    document.querySelectorAll('.avatar-option').forEach(opt => {
-        opt.classList.remove('selected');
-        if (opt.textContent === selectedAvatar) {
-            opt.classList.add('selected');
-        }
-    });
+/* User Profile Screen */
+.user-profile-screen {
+    background: #0a0a0a;
+    overflow-y: auto;
 }
 
-// Загрузка городов для редактирования
-function loadEditCities() {
-    const countrySelect = document.getElementById('editCountry');
-    const citySelect = document.getElementById('editCity');
-    const country = countrySelect.value;
-    
-    citySelect.innerHTML = '<option value="">Выберите город</option>';
-    
-    if (country && countriesData[country]) {
-        countriesData[country].forEach(city => {
-            const option = document.createElement('option');
-            option.value = city;
-            option.textContent = city;
-            if (city === currentUser.city) {
-                option.selected = true;
-            }
-            citySelect.appendChild(option);
-        });
-        citySelect.disabled = false;
-    } else {
-        citySelect.disabled = true;
+.user-profile-back {
+    padding: 15px 20px;
+    padding-top: 25px;
+    color: #888;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #1a1a1a;
+    border-bottom: 1px solid #252525;
+}
+
+.user-profile-back:active {
+    color: white;
+}
+
+.user-profile-content {
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Avatar */
+.user-profile-avatar {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    margin-bottom: 20px;
+    border: 4px solid #333;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Name */
+.user-profile-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+/* Age and Gender */
+.user-profile-age-gender {
+    font-size: 18px;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.user-profile-age-gender span {
+    color: #ccc;
+}
+
+/* Location */
+.user-profile-location {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+/* Online Status */
+.user-profile-online {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #4ade80;
+    margin-bottom: 25px;
+    padding: 8px 16px;
+    background: rgba(74, 222, 128, 0.1);
+    border-radius: 20px;
+}
+
+.user-profile-online.offline {
+    color: #888;
+    background: rgba(136, 136, 136, 0.1);
+}
+
+.online-dot {
+    width: 10px;
+    height: 10px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+}
+
+.user-profile-online.offline .online-dot {
+    background: #666;
+    animation: none;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.2);
     }
 }
 
-// Выбор аватара
-function selectAvatar(element) {
-    document.querySelectorAll('.avatar-option').forEach(opt => {
-        opt.classList.remove('selected');
-    });
-    element.classList.add('selected');
-    selectedAvatar = element.textContent;
+/* Sections */
+.user-profile-section {
+    width: 100%;
+    background: #1a1a1a;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+    text-align: left;
 }
 
-// Вычисление возраста из даты рождения
-function calculateAge() {
-    const birthdateInput = document.getElementById('editBirthdate').value;
-    const ageHint = document.getElementById('ageHint');
-    
-    if (!birthdateInput) {
-        ageHint.textContent = 'Выберите дату рождения';
-        ageHint.classList.remove('success');
-        return;
-    }
-    
-    const birthdate = new Date(birthdateInput);
-    const today = new Date();
-    let age = today.getFullYear() - birthdate.getFullYear();
-    const monthDiff = today.getMonth() - birthdate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
-        age--;
-    }
-    
-    if (age >= 18) {
-        ageHint.textContent = 'Возраст: ' + age + ' лет ✔';
-        ageHint.classList.add('success');
-    } else {
-        ageHint.textContent = 'Возраст: ' + age + ' лет (минимум 18)';
-        ageHint.classList.remove('success');
-    }
+.user-profile-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
 }
 
-// Сохранение профиля
-async function saveProfile() {
-    const name = document.getElementById('editName').value.trim();
-    const country = document.getElementById('editCountry').value;
-    const city = document.getElementById('editCity').value;
-    const bio = document.getElementById('editBio').value.trim();
-    
-    if (!name || name.length < 2) {
-        await showError('Введите имя (минимум 2 символа)');
-        return;
-    }
-    
-    if (!country) {
-        await showError('Выберите страну');
-        return;
-    }
-    
-    if (!city) {
-        await showError('Выберите город');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_URL}/users.php`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: currentUserId,
-                name: name,
-                country: country,
-                city: city,
-                avatar: selectedAvatar,
-                bio: bio
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            currentUser.name = name;
-            currentUser.country = country;
-            currentUser.city = city;
-            currentUser.avatar = selectedAvatar;
-            currentUser.bio = bio;
-            
-            localStorage.setItem('meetgo_user', JSON.stringify(currentUser));
-            
-            await showSuccess('Профиль обновлен!');
-            showScreen('profileScreen');
-            updateProfileDisplay();
-        } else {
-            await showError(data.error || 'Ошибка обновления профиля');
-        }
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        await showError('Ошибка подключения к серверу');
-    }
+.user-profile-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-// Обновление отображения профиля
-function updateProfileDisplay() {
-    if (!currentUser) return;
-    
-    const genderText = currentUser.gender === 'male' ? 'М' : currentUser.gender === 'female' ? 'Ж' : '';
-    
-    document.getElementById('profileAvatar').textContent = currentUser.avatar || '👤';
-    document.getElementById('profileName').textContent = currentUser.name || 'Пользователь';
-    document.getElementById('profileAge').textContent = (currentUser.age || '--') + ' лет ' + genderText;
-    document.getElementById('profileLocation').textContent = 
-        `${currentUser.city || '--'}, ${currentUser.country || '--'}`;
+.user-profile-edit-btn {
+    width: 32px;
+    height: 32px;
+    background: #2a2a2a;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-// ============================================
-// ПРОСМОТР ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ
-// ============================================
-
-async function openUserProfile(userId) {
-    viewingUserId = userId;
-    
-    try {
-        const response = await fetch(`${API_URL}/users.php?action=get_profile&user_id=${userId}`);
-        const data = await response.json();
-        
-        if (data.success && data.user) {
-            const user = data.user;
-            
-            document.getElementById('userProfileAvatar').textContent = user.avatar || '👤';
-            document.getElementById('userProfileName').textContent = user.name || 'Пользователь';
-            document.getElementById('userProfileAge').textContent = user.age || '?';
-            document.getElementById('userProfileGender').textContent = user.gender === 'male' ? 'М' : user.gender === 'female' ? 'Ж' : '';
-            document.getElementById('userProfileLocation').textContent = '📍 ' + (user.city || '') + (user.city && user.country ? ', ' : '') + (user.country || 'Не указано');
-            document.getElementById('userProfileBio').textContent = user.bio || 'Пользователь пока ничего не написал о себе';
-            
-            const onlineEl = document.getElementById('userProfileOnline');
-            if (user.is_online) {
-                onlineEl.innerHTML = '<span class="online-dot"></span> В сети';
-                onlineEl.classList.remove('offline');
-            } else {
-                onlineEl.innerHTML = '<span class="online-dot"></span> Не в сети';
-                onlineEl.classList.add('offline');
-            }
-            
-            const reportBtn = document.getElementById('userProfileReportBtn');
-            const chatBtn = document.getElementById('userProfileChatBtn');
-            const editBioBtn = document.getElementById('editBioBtn');
-            if (userId === currentUserId) {
-                reportBtn.style.display = 'none';
-                chatBtn.style.display = 'none';
-                editBioBtn.style.display = 'flex';
-            } else {
-                reportBtn.style.display = 'block';
-                chatBtn.style.display = 'block';
-                editBioBtn.style.display = 'none';
-            }
-            
-            await loadUserPosts(userId);
-            
-            showScreen('userProfileScreen');
-        } else {
-            await showError('Не удалось загрузить профиль');
-        }
-    } catch (error) {
-        console.error('Error loading profile:', error);
-        await showError('Ошибка загрузки профиля');
-    }
+.user-profile-edit-btn:active {
+    background: #333;
+    color: white;
 }
 
-// ============================================
-// ЗАГРУЗКА ПОСТОВ ПОЛЬЗОВАТЕЛЯ
-// ИСПРАВЛЕНО: Добавлен подсчёт фотографий и корректное отображение
-// ============================================
-async function loadUserPosts(userId) {
-    const postsContainer = document.getElementById('userProfilePosts');
-    
-    try {
-        const response = await fetch(`${API_URL}/posts.php?user_id=${userId}`);
-        const data = await response.json();
-        
-        if (data.success && data.posts && data.posts.length > 0) {
-            postsContainer.innerHTML = data.posts.map(post => {
-                // ИСПРАВЛЕНО: Парсим фотографии правильно (поддержка разделителя |||)
-                const photos = parsePhotos(post.photo);
-                const photoCount = photos.length;
-                
-                // Формируем текст о фотографиях
-                let photoText = '';
-                if (photoCount === 1) {
-                    photoText = '📷 1 фото';
-                } else if (photoCount > 1) {
-                    photoText = `📷 ${photoCount} фото`;
-                }
-                
-                return `
-                    <div class="user-profile-post-card" onclick="openPostDetail(${post.id}, ${userId})">
-                        <div class="user-profile-post-text">${post.text.length > 100 ? post.text.substring(0, 100) + '...' : post.text}</div>
-                        ${photoText ? `<div class="user-profile-post-has-photo">${photoText}</div>` : ''}
-                        <div class="user-profile-post-time">
-                            ${formatTimeAgo(post.minutes_ago)} • осталось ${formatMinutesToTime(post.minutes_left)}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            postsContainer.innerHTML = '<div class="user-profile-no-posts">Нет активных объявлений</div>';
-        }
-    } catch (error) {
-        postsContainer.innerHTML = '<div class="user-profile-no-posts">Ошибка загрузки объявлений</div>';
-    }
+/* Bio */
+.user-profile-bio {
+    font-size: 16px;
+    color: #ccc;
+    line-height: 1.6;
 }
 
-// ============================================
-// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: Парсинг фотографий
-// Поддерживает несколько фото через разделитель |||
-// ============================================
-function parsePhotos(photoString) {
-    const photos = [];
-    
-    if (!photoString || photoString === 'null' || photoString === '' || photoString === 'undefined') {
-        return photos;
-    }
-    
-    // Проверяем есть ли несколько фото (разделитель |||)
-    if (photoString.includes('|||')) {
-        const photoArray = photoString.split('|||');
-        photoArray.forEach(p => {
-            if (p && p.trim()) {
-                photos.push(p.trim());
-            }
-        });
-    } else {
-        photos.push(photoString);
-    }
-    
-    return photos;
+/* Posts Container */
+.user-profile-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-function closeUserProfile() {
-    viewingUserId = null;
-    showScreen('mainScreen');
+/* Post Card */
+.user-profile-post-card {
+    background: #2a2a2a;
+    border-radius: 16px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #333;
 }
 
-// ============================================
-// ДЕТАЛЬНЫЙ ПРОСМОТР ПОСТА
-// ИСПРАВЛЕНО: Теперь открывается карточка как на главной с поддержкой нескольких фото
-// ============================================
-async function openPostDetail(postId, userId) {
-    try {
-        const response = await fetch(`${API_URL}/posts.php?user_id=${userId}`);
-        const data = await response.json();
-        
-        if (data.success && data.posts) {
-            const post = data.posts.find(p => p.id === postId);
-            if (post) {
-                currentDetailPost = post;
-                showPostDetailModal(post);
-            }
-        }
-    } catch (error) {
-        console.error('Error loading post:', error);
-    }
+.user-profile-post-card:active {
+    background: #333;
+    transform: scale(0.98);
 }
 
-// ============================================
-// МОДАЛЬНОЕ ОКНО ПОСТА
-// ПЕРЕПИСАНО: Теперь создаёт карточку как на главной странице с горизонтальным скроллом
-// ============================================
-function showPostDetailModal(post) {
-    const modal = document.getElementById('postDetailModal');
-    // ИСПРАВЛЕНО: Используем .post-detail-modal как контейнер
-    const container = modal.querySelector('.post-detail-modal');
-    
-    // Парсим фотографии
-    const photos = parsePhotos(post.photo);
-    const hasPhotos = photos.length > 0;
-    
-    // Данные пользователя
-    const isOnline = post.is_online === 1 || post.is_online === '1';
-    const onlineClass = isOnline ? 'online' : 'offline';
-    const genderIcon = post.gender === 'male' ? '♂' : post.gender === 'female' ? '♀' : '';
-    const genderText = post.gender === 'male' ? 'Мужчина' : post.gender === 'female' ? 'Женщина' : '';
-    
-    // Создаём секции как на главной странице
-    const sectionsArray = [];
-    
-    // Секция объявления
-    sectionsArray.push(`
-        <div class="card-section card-section-post detail-section">
-            <div class="card-timer-row">
-                <div class="card-timer">
-                    <span class="card-timer-icon">⏱</span>
-                    <span>${formatMinutesToTime(post.minutes_left)}</span>
-                </div>
-                <div class="card-posted-time">${formatTimeAgo(post.minutes_ago)}</div>
-            </div>
-            <div class="card-text">${post.text}</div>
-        </div>
-    `);
-    
-    // Секция профиля
-    sectionsArray.push(`
-        <div class="card-section card-section-profile detail-section">
-            <div class="card-avatar">
-                ${post.avatar || '👤'}
-                <div class="online-badge ${onlineClass}"></div>
-            </div>
-            <div class="card-user-name">${post.name}</div>
-            <div class="card-user-info">
-                <span class="gender-icon">${genderIcon}</span>
-                <span>${genderText}</span>
-                <span>•</span>
-                <span>${post.age} лет</span>
-            </div>
-            <div class="card-user-location">📍 ${post.city || ''}${post.city && post.country ? ', ' : ''}${post.country || ''}</div>
-        </div>
-    `);
-    
-    // Секции фотографий (каждое фото на отдельном слайде)
-    photos.forEach((photo, index) => {
-        sectionsArray.push(`
-            <div class="card-section card-section-photo detail-section">
-                <div class="card-single-photo">
-                    <img src="${photo}" alt="Фото ${index + 1}" loading="lazy">
-                </div>
-            </div>
-        `);
-    });
-    
-    const totalSections = sectionsArray.length;
-    
-    // Создаём клоны для кругового скролла
-    const firstSectionClone = sectionsArray[0].replace('detail-section', 'detail-section clone clone-first');
-    const lastSectionClone = sectionsArray[totalSections - 1].replace('detail-section', 'detail-section clone clone-last');
-    
-    // Собираем HTML
-    const sectionsHtml = [lastSectionClone, ...sectionsArray, firstSectionClone].join('');
-    
-    // Индикаторы
-    const indicatorsHtml = sectionsArray.map((_, index) => 
-        `<div class="card-scroll-indicator${index === 0 ? ' active' : ''}" data-section="${index}"></div>`
-    ).join('');
-    
-    // Собираем полный HTML модального окна
-    container.innerHTML = `
-        <!-- Кнопка закрытия -->
-        <div class="post-detail-close" onclick="closePostDetail()">✕</div>
-        
-        <!-- Горизонтальный скролл контейнер -->
-        <div class="card-scroll-container detail-scroll" data-total-sections="${totalSections}">
-            <div class="card-wide-content">
-                ${sectionsHtml}
-            </div>
-        </div>
-        
-        <!-- Индикаторы позиции -->
-        <div class="card-scroll-indicators detail-indicators">
-            ${indicatorsHtml}
-        </div>
-        
-        <!-- Кнопка чата -->
-        <div class="post-detail-actions">
-            <button class="post-detail-chat-btn" onclick="openChat(${post.user_id}); closePostDetail();">
-                💬 Написать сообщение
-            </button>
-        </div>
-    `;
-    
-    // Показываем модальное окно
-    modal.classList.add('active');
-    
-    // Инициализируем скролл после рендеринга
-    setTimeout(() => {
-        initDetailScroll(container, totalSections);
-    }, 50);
+.user-profile-post-text {
+    font-size: 15px;
+    color: #eee;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-// ============================================
-// ИНИЦИАЛИЗАЦИЯ СКРОЛЛА В МОДАЛЬНОМ ОКНЕ
-// Такая же логика как на главной странице
-// ============================================
-function initDetailScroll(container, totalSections) {
-    const scrollContainer = container.querySelector('.detail-scroll');
-    const indicators = container.querySelectorAll('.card-scroll-indicator');
-    const sections = container.querySelectorAll('.detail-section:not(.clone)');
-    
-    if (!scrollContainer || sections.length === 0) return;
-    
-    let sectionWidth = sections[0].offsetWidth;
-    let isAdjusting = false;
-    
-    // Начальная позиция (первая реальная секция, пропускаем клон)
-    scrollContainer.scrollLeft = sectionWidth;
-    
-    // Включаем плавный скролл
-    setTimeout(() => {
-        scrollContainer.style.scrollBehavior = 'smooth';
-    }, 50);
-    
-    // Обработчик скролла
-    scrollContainer.addEventListener('scroll', () => {
-        if (isAdjusting) return;
-        
-        const scrollLeft = scrollContainer.scrollLeft;
-        const currentIndex = Math.round(scrollLeft / sectionWidth) - 1;
-        const realIndex = ((currentIndex % totalSections) + totalSections) % totalSections;
-        
-        // Обновляем индикаторы
-        indicators.forEach((ind, index) => {
-            ind.classList.toggle('active', index === realIndex);
-        });
-    });
-    
-    // Обработчик окончания скролла
-    scrollContainer.addEventListener('scrollend', () => {
-        if (isAdjusting) return;
-        
-        const scrollLeft = scrollContainer.scrollLeft;
-        sectionWidth = sections[0].offsetWidth;
-        
-        // Если долистали до клона в конце
-        if (scrollLeft >= sectionWidth * (totalSections + 1) - 10) {
-            isAdjusting = true;
-            scrollContainer.style.scrollBehavior = 'auto';
-            scrollContainer.scrollLeft = sectionWidth;
-            scrollContainer.style.scrollBehavior = 'smooth';
-            setTimeout(() => { isAdjusting = false; }, 50);
-        }
-        // Если долистали до клона в начале
-        else if (scrollLeft <= 10) {
-            isAdjusting = true;
-            scrollContainer.style.scrollBehavior = 'auto';
-            scrollContainer.scrollLeft = sectionWidth * totalSections;
-            scrollContainer.style.scrollBehavior = 'smooth';
-            setTimeout(() => { isAdjusting = false; }, 50);
-        }
-    });
-    
-    // Fallback для браузеров без scrollend
-    let scrollTimeout;
-    scrollContainer.addEventListener('scroll', () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            scrollContainer.dispatchEvent(new Event('scrollend'));
-        }, 150);
-    });
-    
-    // Клик по индикатору
-    indicators.forEach((ind, index) => {
-        ind.addEventListener('click', () => {
-            sectionWidth = sections[0].offsetWidth;
-            scrollContainer.scrollTo({
-                left: sectionWidth * (index + 1),
-                behavior: 'smooth'
-            });
-        });
-    });
+/* ============================================
+   POST PHOTOS - Single Photo
+   ============================================ */
+
+.user-profile-post-photos {
+    margin-bottom: 12px;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-function closePostDetail() {
-    document.getElementById('postDetailModal').classList.remove('active');
-    currentDetailPost = null;
+.user-profile-post-photo {
+    width: 100%;
+    max-height: 200px;
+    overflow: hidden;
+    border-radius: 12px;
 }
 
-// ============================================
-// РЕДАКТИРОВАНИЕ "О СЕБЕ"
-// ============================================
-
-function editBio() {
-    const currentBio = document.getElementById('userProfileBio').textContent;
-    const textarea = document.getElementById('editBioTextarea');
-    textarea.value = currentBio === 'Пользователь пока ничего не написал о себе' ? '' : currentBio;
-    document.getElementById('bioCharCount').textContent = textarea.value.length;
-    
-    textarea.oninput = function() {
-        document.getElementById('bioCharCount').textContent = this.value.length;
-    };
-    
-    document.getElementById('editBioModal').classList.add('active');
+.user-profile-post-photo img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
 }
 
-function closeEditBio() {
-    document.getElementById('editBioModal').classList.remove('active');
+/* ============================================
+   POST PHOTOS - Multiple Photos Scroll
+   ============================================ */
+
+.user-profile-post-photos-scroll {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    scrollbar-width: none;
 }
 
-async function saveBio() {
-    const bio = document.getElementById('editBioTextarea').value.trim();
-    
-    try {
-        const response = await fetch(`${API_URL}/users.php`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: currentUserId,
-                bio: bio
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            document.getElementById('userProfileBio').textContent = bio || 'Пользователь пока ничего не написал о себе';
-            currentUser.bio = bio;
-            localStorage.setItem('meetgo_user', JSON.stringify(currentUser));
-            closeEditBio();
-            await showSuccess('Сохранено');
-        } else {
-            await showError(data.error || 'Ошибка сохранения');
-        }
-    } catch (error) {
-        console.error('Save bio error:', error);
-        await showError('Ошибка сохранения');
-    }
+.user-profile-post-photos-scroll::-webkit-scrollbar {
+    display: none;
 }
 
-function openChatWithUser() {
-    if (viewingUserId) {
-        openChat(viewingUserId);
-    }
+.user-profile-post-photo-item {
+    flex: 0 0 auto;
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    overflow: hidden;
+    scroll-snap-align: start;
 }
 
-async function reportUser() {
-    if (!viewingUserId) return;
-    
-    const confirmed = await showConfirm(
-        'Вы уверены, что хотите пожаловаться на этого пользователя?',
-        'Жалоба на пользователя',
-        '⚠️'
-    );
-    
-    if (confirmed) {
-        try {
-            const response = await fetch(`${API_URL}/reports.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    reporter_id: currentUserId,
-                    reported_user_id: viewingUserId,
-                    type: 'user',
-                    reason: 'Жалоба на пользователя'
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                await showSuccess('Жалоба отправлена');
-            } else {
-                await showError(data.error || 'Ошибка отправки жалобы');
-            }
-        } catch (error) {
-            console.error('Report error:', error);
-            await showError('Ошибка отправки жалобы');
-        }
-    }
+.user-profile-post-photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.user-profile-post-photo-count {
+    font-size: 12px;
+    color: #4ade80;
+    margin-bottom: 8px;
+}
+
+.user-profile-post-has-photo {
+    font-size: 13px;
+    color: #4ade80;
+    margin-bottom: 8px;
+}
+
+.user-profile-post-time {
+    font-size: 12px;
+    color: #666;
+}
+
+.user-profile-no-posts {
+    text-align: center;
+    padding: 30px 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Action Buttons */
+.user-profile-actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.user-profile-btn {
+    width: 100%;
+    padding: 16px 20px;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.user-profile-btn:active {
+    transform: scale(0.98);
+}
+
+.user-profile-btn-chat {
+    background: white;
+    color: #0a0a0a;
+}
+
+.user-profile-btn-chat:active {
+    background: #e0e0e0;
+}
+
+.user-profile-btn-report {
+    background: transparent;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+}
+
+.user-profile-btn-report:active {
+    background: rgba(255, 107, 107, 0.1);
+}
+
+/* ============================================
+   POST DETAIL MODAL
+   ============================================ */
+
+.post-detail-overlay,
+#postDetailModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.post-detail-overlay.active,
+#postDetailModal.active {
+    display: flex;
+}
+
+.post-detail-modal {
+    background: #1a1a1a;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.post-detail-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.post-detail-close:active {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.post-detail-content {
+    padding: 20px;
+}
+
+/* User Info in Modal */
+.post-detail-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+}
+
+.post-detail-avatar {
+    width: 55px;
+    height: 55px;
+    background: #2a2a2a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.post-detail-online-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+}
+
+.post-detail-online-badge.online {
+    background: #4ade80;
+}
+
+.post-detail-online-badge.offline {
+    background: #666;
+}
+
+.post-detail-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.post-detail-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.post-detail-meta {
+    font-size: 13px;
+    color: #888;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Text in Modal */
+.post-detail-text {
+    font-size: 16px;
+    color: #eee;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+/* ============================================
+   POST DETAIL PHOTOS
+   ============================================ */
+
+.post-detail-photos {
+    margin-bottom: 20px;
+}
+
+.post-detail-photos-scroll {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0;
+    scrollbar-width: none;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.post-detail-photos-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.post-detail-photo-item {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    min-height: 200px;
+    max-height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0a;
+}
+
+.post-detail-photo-item img {
+    width: 100%;
+    height: auto;
+    max-height: 350px;
+    object-fit: contain;
+    display: block;
+}
+
+/* Photo Indicators */
+.post-detail-photo-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.post-detail-photo-indicator {
+    width: 8px;
+    height: 8px;
+    background: #333;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.post-detail-photo-indicator.active {
+    background: white;
+    transform: scale(1.3);
+}
+
+/* Time in Modal */
+.post-detail-time {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+/* Action Buttons in Modal */
+.post-detail-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.post-detail-btn {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.post-detail-btn:active {
+    transform: scale(0.98);
+}
+
+.post-detail-btn-chat {
+    background: white;
+    color: #0a0a0a;
+}
+
+.post-detail-btn-chat:active {
+    background: #e0e0e0;
+}
+
+/* ============================================
+   EDIT BIO MODAL
+   ============================================ */
+
+.edit-bio-modal {
+    background: linear-gradient(145deg, #1e1e1e, #151515);
+    border-radius: 24px;
+    padding: 25px;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+    animation: slideUp 0.3s ease;
+}
+
+.edit-bio-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.edit-bio-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    background: #0a0a0a;
+    border: 2px solid #2a2a2a;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-family: inherit;
+    resize: none;
+    margin-bottom: 20px;
+}
+
+.edit-bio-textarea:focus {
+    outline: none;
+    border-color: #4ade80;
+}
+
+.edit-bio-textarea::placeholder {
+    color: #666;
+}
+
+.edit-bio-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.edit-bio-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.edit-bio-btn-save {
+    background: white;
+    color: #0a0a0a;
+}
+
+.edit-bio-btn-save:active {
+    background: #e0e0e0;
+}
+
+.edit-bio-btn-cancel {
+    background: #2a2a2a;
+    color: #888;
+}
+
+.edit-bio-btn-cancel:active {
+    background: #333;
+}
+
+/* ============================================
+   EDIT PROFILE SCREEN STYLES
+   ============================================ */
+
+.edit-profile-content {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(100vh - 80px);
+}
+
+.edit-section {
+    margin-bottom: 25px;
+}
+
+.edit-label {
+    display: block;
+    color: #888;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Avatar Picker */
+.avatar-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.avatar-option {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.avatar-option:active {
+    transform: scale(0.95);
+}
+
+.avatar-option.selected {
+    border-color: white;
+    background: #2a2a2a;
+}
+
+/* Gender Edit Selector */
+.gender-edit-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.gender-edit-option {
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gender-edit-option:active {
+    transform: scale(0.97);
+}
+
+.gender-edit-option.selected {
+    border-color: white;
+    background: #2a2a2a;
+}
+
+.gender-edit-option .gender-icon {
+    font-size: 28px;
+    color: #888;
+}
+
+.gender-edit-option.selected .gender-icon {
+    color: white;
+}
+
+.gender-edit-option .gender-label {
+    color: #888;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.gender-edit-option.selected .gender-label {
+    color: white;
 }

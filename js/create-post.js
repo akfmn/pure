@@ -1,86 +1,111 @@
 // ============================================
-// СОЗДАНИЕ ПОСТА
+// CREATE-POST.JS - Создание постов
+// Версия 2.0 - Полностью переписанный модуль
 // ============================================
 
 // Массив для хранения фото поста (до 3х)
-let postPhotos = [];
+var postPhotos = [];
 
-// Duration validation
+// ============================================
+// ВАЛИДАЦИЯ ДЛИТЕЛЬНОСТИ
+// ============================================
 function validateDuration() {
-    const hoursInput = document.getElementById('hoursInput');
-    const minutesInput = document.getElementById('minutesInput');
-    const hint = document.getElementById('durationHint');
+    var hoursInput = document.getElementById('hoursInput');
+    var minutesInput = document.getElementById('minutesInput');
+    var hint = document.getElementById('durationHint');
     
-    let hours = parseInt(hoursInput.value) || 0;
-    let minutes = parseInt(minutesInput.value) || 0;
+    if (!hoursInput || !minutesInput) return;
+    
+    var hours = parseInt(hoursInput.value) || 0;
+    var minutes = parseInt(minutesInput.value) || 0;
     
     if (hours < 0) hours = 0;
+    if (hours > 24) hours = 24;
     if (minutes < 0) minutes = 0;
-    if (minutes > 59) {
-        minutes = 59;
-        minutesInput.value = 59;
-    }
+    if (minutes > 59) minutes = 59;
     
-    const totalMinutes = (hours * 60) + minutes;
+    var totalMinutes = (hours * 60) + minutes;
     
-    if (totalMinutes > 1440) {
-        hoursInput.value = 24;
-        minutesInput.value = 0;
-        hours = 24;
-        minutes = 0;
-        hint.textContent = 'Максимум 24 часа!';
-        hint.classList.add('error');
-        selectedDuration = 1440;
-    } else if (totalMinutes === 0) {
-        hint.textContent = 'Минимум 1 минута';
-        hint.classList.add('error');
-        selectedDuration = 1;
+    if (hint) {
+        if (totalMinutes > 1440) {
+            hoursInput.value = 24;
+            minutesInput.value = 0;
+            hint.textContent = 'Максимум 24 часа!';
+            hint.classList.add('error');
+            selectedDuration = 1440;
+        } else if (totalMinutes === 0) {
+            hint.textContent = 'Минимум 1 минута';
+            hint.classList.add('error');
+            selectedDuration = 1;
+        } else {
+            hint.textContent = 'Максимум 24 часа';
+            hint.classList.remove('error');
+            selectedDuration = totalMinutes;
+        }
     } else {
-        hint.textContent = 'Максимум 24 часа';
-        hint.classList.remove('error');
-        selectedDuration = totalMinutes;
+        selectedDuration = Math.max(1, Math.min(totalMinutes, 1440));
     }
     
     hoursInput.value = hours;
     minutesInput.value = minutes;
 }
 
-// Обработка выбора фото для поста - до 3х фотографий
+// ============================================
+// ОБРАБОТКА ВЫБОРА ФОТО
+// ============================================
 function handlePostPhotoSelect(event) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+    console.log('handlePostPhotoSelect вызвана');
+    
+    var files = event.target.files;
+    if (!files || files.length === 0) {
+        console.log('Файлы не выбраны');
+        return;
+    }
+    
+    console.log('Выбрано файлов:', files.length);
     
     // Проверяем сколько фото уже есть
-    const remainingSlots = 3 - postPhotos.length;
+    var remainingSlots = 3 - postPhotos.length;
     if (remainingSlots <= 0) {
-        showError('Максимум 3 фотографии');
+        alert('Максимум 3 фотографии');
+        event.target.value = '';
         return;
     }
     
     // Берём только нужное количество файлов
-    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+    var filesToProcess = [];
+    for (var i = 0; i < Math.min(files.length, remainingSlots); i++) {
+        filesToProcess.push(files[i]);
+    }
     
-    filesToProcess.forEach(file => {
+    console.log('Обрабатываем файлов:', filesToProcess.length);
+    
+    filesToProcess.forEach(function(file) {
         if (!file.type.startsWith('image/')) {
-            showError('Пожалуйста, выберите изображение');
+            alert('Пожалуйста, выберите изображение');
             return;
         }
         
-        if (file.size > 5 * 1024 * 1024) {
-            showError('Размер изображения не должен превышать 5MB');
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Размер изображения не должен превышать 10MB');
             return;
         }
         
         // Читаем файл
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const imageDataUrl = e.target.result;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var imageDataUrl = e.target.result;
+            console.log('Файл прочитан, размер данных:', imageDataUrl.length);
             
-            // Сжимаем изображение сохраняя пропорции
-            compressImage(imageDataUrl, (compressedDataUrl) => {
+            // Сжимаем изображение
+            compressImage(imageDataUrl, function(compressedDataUrl) {
                 postPhotos.push(compressedDataUrl);
+                console.log('Фото добавлено, всего:', postPhotos.length);
                 updatePhotoPreview();
             });
+        };
+        reader.onerror = function() {
+            alert('Ошибка чтения файла');
         };
         reader.readAsDataURL(file);
     });
@@ -89,23 +114,23 @@ function handlePostPhotoSelect(event) {
     event.target.value = '';
 }
 
-// Сжатие изображения с сохранением пропорций
+// ============================================
+// СЖАТИЕ ИЗОБРАЖЕНИЯ
+// ============================================
 function compressImage(dataUrl, callback) {
-    const img = new Image();
-    img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+    var img = new Image();
+    img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
         
-        // Максимальные размеры
-        const maxWidth = 1200;
-        const maxHeight = 1200;
+        var maxWidth = 1200;
+        var maxHeight = 1200;
         
-        let width = img.width;
-        let height = img.height;
+        var width = img.width;
+        var height = img.height;
         
-        // Масштабируем если нужно, сохраняя пропорции
         if (width > maxWidth || height > maxHeight) {
-            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            var ratio = Math.min(maxWidth / width, maxHeight / height);
             width = Math.round(width * ratio);
             height = Math.round(height * ratio);
         }
@@ -113,83 +138,103 @@ function compressImage(dataUrl, callback) {
         canvas.width = width;
         canvas.height = height;
         
-        // Рисуем изображение
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Конвертируем в JPEG с качеством 0.85
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        var compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        console.log('Сжато с', dataUrl.length, 'до', compressedDataUrl.length);
         callback(compressedDataUrl);
+    };
+    img.onerror = function() {
+        console.log('Ошибка загрузки изображения, используем оригинал');
+        callback(dataUrl);
     };
     img.src = dataUrl;
 }
 
-// Обновление превью фотографий
+// ============================================
+// ОБНОВЛЕНИЕ ПРЕВЬЮ ФОТОГРАФИЙ
+// ============================================
 function updatePhotoPreview() {
-    const preview = document.getElementById('postPhotoPreview');
-    const removeBtn = document.getElementById('postPhotoRemoveBtn');
+    var preview = document.getElementById('postPhotoPreview');
+    var removeBtn = document.getElementById('postPhotoRemoveBtn');
+    
+    if (!preview) {
+        console.error('postPhotoPreview не найден!');
+        return;
+    }
+    
+    console.log('updatePhotoPreview, фото:', postPhotos.length);
     
     if (postPhotos.length === 0) {
-        preview.innerHTML = `
-            <div class="photo-upload-placeholder">
-                <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
-                <div style="font-size: 14px; color: #999;">Нажмите для добавления фото (до 3х)</div>
-            </div>
-        `;
-        removeBtn.style.display = 'none';
+        preview.innerHTML = '<div class="photo-upload-placeholder">' +
+            '<div style="font-size: 48px; margin-bottom: 10px;">📷</div>' +
+            '<div style="font-size: 14px; color: #999;">Нажмите для добавления фото (до 3х)</div>' +
+            '</div>';
+        preview.onclick = function() { document.getElementById('postPhotoInput').click(); };
+        if (removeBtn) removeBtn.style.display = 'none';
     } else {
-        let html = '<div class="photo-preview-grid">';
+        var html = '<div class="photo-preview-grid">';
         
-        postPhotos.forEach((photo, index) => {
-            html += `
-                <div class="photo-preview-item">
-                    <img src="${photo}" alt="Фото ${index + 1}">
-                    <button class="photo-preview-remove" onclick="removePhoto(${index})">✕</button>
-                </div>
-            `;
-        });
+        for (var i = 0; i < postPhotos.length; i++) {
+            html += '<div class="photo-preview-item">' +
+                '<img src="' + postPhotos[i] + '" alt="Фото ' + (i + 1) + '">' +
+                '<button type="button" class="photo-preview-remove" onclick="event.stopPropagation(); removePhoto(' + i + ')">✕</button>' +
+                '</div>';
+        }
         
-        // Показываем кнопку добавления если меньше 3х фото
         if (postPhotos.length < 3) {
-            html += `
-                <div class="photo-preview-add" onclick="document.getElementById('postPhotoInput').click()">
-                    <span>+</span>
-                </div>
-            `;
+            html += '<div class="photo-preview-add" onclick="event.stopPropagation(); document.getElementById(\'postPhotoInput\').click()">' +
+                '<span>+</span>' +
+                '</div>';
         }
         
         html += '</div>';
         preview.innerHTML = html;
-        removeBtn.style.display = 'block';
-        removeBtn.textContent = '✕ Удалить все фото';
+        preview.onclick = null;
+        
+        if (removeBtn) {
+            removeBtn.style.display = 'block';
+            removeBtn.textContent = '✕ Удалить все фото';
+        }
     }
     
     // Обновляем глобальную переменную для совместимости
     postPhotoDataUrl = postPhotos.length > 0 ? postPhotos[0] : null;
 }
 
-// Удаление одного фото по индексу
+// ============================================
+// УДАЛЕНИЕ ФОТО
+// ============================================
 function removePhoto(index) {
+    console.log('Удаление фото по индексу:', index);
     postPhotos.splice(index, 1);
     updatePhotoPreview();
 }
 
-// Удаление всех фото
 function removePostPhoto() {
+    console.log('Удаление всех фото');
     postPhotos = [];
     postPhotoFile = null;
     postPhotoDataUrl = null;
     updatePhotoPreview();
-    document.getElementById('postPhotoInput').value = '';
+    var input = document.getElementById('postPhotoInput');
+    if (input) input.value = '';
 }
 
-// Form validation
+// ============================================
+// ВАЛИДАЦИЯ ФОРМЫ
+// ============================================
 function validateForm() {
-    const text = document.getElementById('requestText').value;
-    const postButton = document.getElementById('postButton');
-    const charCounter = document.getElementById('charCounter');
+    var textArea = document.getElementById('requestText');
+    var postButton = document.getElementById('postButton');
+    var charCounter = document.getElementById('charCounter');
+    
+    if (!textArea) return;
+    
+    var text = textArea.value;
     
     if (charCounter) {
-        charCounter.textContent = `${text.length} / 550`;
+        charCounter.textContent = text.length + ' / 550';
         
         if (text.length > 500) {
             charCounter.style.color = '#ff6b6b';
@@ -200,60 +245,161 @@ function validateForm() {
         }
     }
     
-    if (text.trim().length > 0) {
-        postButton.style.opacity = '1';
-    } else {
-        postButton.style.opacity = '0.5';
+    if (postButton) {
+        if (text.trim().length > 0) {
+            postButton.style.opacity = '1';
+        } else {
+            postButton.style.opacity = '0.5';
+        }
     }
 }
 
-// Create request
+// ============================================
+// СОЗДАНИЕ ПОСТА
+// ============================================
 async function createRequest() {
-    const text = document.getElementById('requestText').value;
+    var textArea = document.getElementById('requestText');
+    var postButton = document.getElementById('postButton');
     
-    if (text.trim().length === 0) {
-        alert('Пожалуйста, напишите описание встречи');
+    if (!textArea) {
+        console.error('requestText не найден');
         return;
     }
     
-    const postButton = document.getElementById('postButton');
-    postButton.textContent = 'Создание...';
-    postButton.style.opacity = '0.5';
+    var text = textArea.value.trim();
     
-    // Передаём все фото (или первое для совместимости)
-    const photoToSend = postPhotos.length > 0 ? postPhotos.join('|||') : null;
-    const success = await createPostOnServer(text, selectedDuration, photoToSend);
-    
-    if (success) {
-        document.getElementById('requestText').value = '';
-        removePostPhoto();
-        validateForm();
-        
-        showScreen('mainScreen');
-        
-        setTimeout(async () => {
-            const hours = parseInt(document.getElementById('hoursInput').value) || 0;
-            const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
-            
-            let durationText = '';
-            if (hours > 0 && minutes > 0) {
-                durationText = hours + ' ч ' + minutes + ' мин';
-            } else if (hours > 0) {
-                durationText = hours + ' час(а)';
-            } else {
-                durationText = minutes + ' минут';
-            }
-            
-            await showSuccess('Запрос создан! Он будет активен ' + durationText);
-            
-            document.getElementById('hoursInput').value = 1;
-            document.getElementById('minutesInput').value = 0;
-            validateDuration();
-        }, 300);
-    } else {
-        alert('Ошибка при создании запроса. Попробуйте ещё раз.');
+    if (text.length === 0) {
+        alert('Пожалуйста, напишите описание');
+        return;
     }
     
-    postButton.textContent = 'Создать';
-    postButton.style.opacity = '1';
+    console.log('Создание поста...');
+    console.log('Текст:', text.substring(0, 50) + '...');
+    console.log('Длительность:', selectedDuration);
+    console.log('Фото:', postPhotos.length);
+    
+    // Блокируем кнопку
+    if (postButton) {
+        postButton.textContent = 'Создание...';
+        postButton.style.opacity = '0.5';
+        postButton.style.pointerEvents = 'none';
+    }
+    
+    try {
+        // Объединяем фото через разделитель |||
+        var photoToSend = postPhotos.length > 0 ? postPhotos.join('|||') : null;
+        
+        // Сохраняем длительность для сообщения
+        var durationForMessage = selectedDuration;
+        
+        var success = await createPostOnServer(text, selectedDuration, photoToSend);
+        
+        console.log('Результат создания:', success);
+        
+        if (success) {
+            // Очищаем форму
+            textArea.value = '';
+            removePostPhoto();
+            validateForm();
+            
+            // Сбрасываем длительность
+            var hoursInput = document.getElementById('hoursInput');
+            var minutesInput = document.getElementById('minutesInput');
+            if (hoursInput) hoursInput.value = 1;
+            if (minutesInput) minutesInput.value = 0;
+            validateDuration();
+            
+            // Переключаемся на главный экран
+            showScreen('mainScreen');
+            
+            // Показываем сообщение об успехе
+            setTimeout(function() {
+                var durationText = '';
+                if (durationForMessage >= 60) {
+                    var h = Math.floor(durationForMessage / 60);
+                    var m = durationForMessage % 60;
+                    if (m > 0) {
+                        durationText = h + ' ч ' + m + ' мин';
+                    } else {
+                        durationText = h + ' час(а)';
+                    }
+                } else {
+                    durationText = durationForMessage + ' минут';
+                }
+                
+                if (typeof showSuccess === 'function') {
+                    showSuccess('Запрос создан! Он будет активен ' + durationText);
+                } else {
+                    alert('Запрос создан! Он будет активен ' + durationText);
+                }
+            }, 300);
+        } else {
+            alert('Ошибка при создании запроса. Попробуйте ещё раз.');
+        }
+    } catch (error) {
+        console.error('Ошибка создания поста:', error);
+        alert('Ошибка при создании запроса');
+    }
+    
+    // Разблокируем кнопку
+    if (postButton) {
+        postButton.textContent = 'Создать';
+        postButton.style.opacity = '1';
+        postButton.style.pointerEvents = 'auto';
+    }
 }
+
+// ============================================
+// СОЗДАНИЕ ПОСТА НА СЕРВЕРЕ
+// ============================================
+async function createPostOnServer(text, durationMinutes, photoDataUrl) {
+    try {
+        var postData = {
+            user_id: currentUserId,
+            text: text,
+            duration_minutes: durationMinutes,
+            photo: photoDataUrl || null
+        };
+        
+        // Добавляем координаты если доступны
+        if (typeof userLocation !== 'undefined' && userLocation && userLocation.enabled) {
+            postData.latitude = userLocation.latitude;
+            postData.longitude = userLocation.longitude;
+        }
+        
+        console.log('Отправка на сервер:', {
+            user_id: postData.user_id,
+            text: postData.text.substring(0, 30) + '...',
+            duration: postData.duration_minutes,
+            hasPhoto: !!postData.photo
+        });
+        
+        var response = await fetch(API_URL + '/posts.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        });
+        
+        var data = await response.json();
+        console.log('Ответ сервера:', data);
+        
+        if (data.success) {
+            // Перезагружаем посты
+            if (typeof loadPostsFromServer === 'function') {
+                await loadPostsFromServer();
+            }
+            return true;
+        } else {
+            console.error('Ошибка создания поста:', data.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('Ошибка запроса:', error);
+        return false;
+    }
+}
+
+// Инициализация при загрузке
+console.log('create-post.js загружен');

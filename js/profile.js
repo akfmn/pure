@@ -1,192 +1,12 @@
 // ============================================
-// РЕДАКТИРОВАНИЕ ПРОФИЛЯ
+// PROFILE.JS - Модуль профиля пользователя
+// Глобальные переменные viewingUserId и currentDetailPost 
+// уже объявлены в config.js
 // ============================================
 
-// Открытие экрана редактирования (вызывается в showScreen)
-function initEditProfile() {
-    if (!currentUser) return;
-    
-    // Заполняем текущие данные
-    document.getElementById('editName').value = currentUser.name || '';
-    document.getElementById('editBirthdate').value = currentUser.birthdate || '';
-    
-    // Заполняем bio
-    const bioTextarea = document.getElementById('editBio');
-    bioTextarea.value = currentUser.bio || '';
-    document.getElementById('editBioCount').textContent = bioTextarea.value.length;
-    bioTextarea.oninput = function() {
-        document.getElementById('editBioCount').textContent = this.value.length;
-    };
-    
-    // Устанавливаем максимальную дату (18 лет назад)
-    const today = new Date();
-    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-    document.getElementById('editBirthdate').max = maxDate.toISOString().split('T')[0];
-    
-    // Заполняем список стран
-    const countrySelect = document.getElementById('editCountry');
-    countrySelect.innerHTML = '<option value="">Выберите страну</option>';
-    Object.keys(countriesData).sort().forEach(country => {
-        const option = document.createElement('option');
-        option.value = country;
-        option.textContent = country;
-        if (country === currentUser.country) {
-            option.selected = true;
-        }
-        countrySelect.appendChild(option);
-    });
-    
-    // Загружаем города текущей страны
-    loadEditCities();
-    
-    // Устанавливаем аватар
-    selectedAvatar = currentUser.avatar || '👤';
-    document.querySelectorAll('.avatar-option').forEach(opt => {
-        opt.classList.remove('selected');
-        if (opt.dataset.avatar === selectedAvatar) {
-            opt.classList.add('selected');
-        }
-    });
-    
-    // Обновляем подсказку возраста
-    updateEditAge();
-}
-
-// Загрузка городов при выборе страны
-function loadEditCities() {
-    const countrySelect = document.getElementById('editCountry');
-    const citySelect = document.getElementById('editCity');
-    const selectedCountry = countrySelect.value;
-    
-    citySelect.innerHTML = '<option value="">Выберите город</option>';
-    
-    if (selectedCountry && countriesData[selectedCountry]) {
-        countriesData[selectedCountry].forEach(city => {
-            const option = document.createElement('option');
-            option.value = city;
-            option.textContent = city;
-            if (city === currentUser.city) {
-                option.selected = true;
-            }
-            citySelect.appendChild(option);
-        });
-    }
-}
-
-// Выбор аватара
-function selectAvatar(avatar) {
-    selectedAvatar = avatar;
-    document.querySelectorAll('.avatar-option').forEach(opt => {
-        opt.classList.remove('selected');
-    });
-    event.target.classList.add('selected');
-}
-
-// Обновление подсказки возраста
-function updateEditAge() {
-    const birthdateInput = document.getElementById('editBirthdate');
-    const ageHint = document.getElementById('editAgeHint');
-    
-    if (!birthdateInput.value) {
-        ageHint.textContent = 'Возраст: --';
-        ageHint.classList.remove('success');
-        return;
-    }
-    
-    const birthdate = new Date(birthdateInput.value);
-    const today = new Date();
-    
-    let age = today.getFullYear() - birthdate.getFullYear();
-    const monthDiff = today.getMonth() - birthdate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
-        age--;
-    }
-    
-    if (age >= 18) {
-        ageHint.textContent = 'Возраст: ' + age + ' лет ✔';
-        ageHint.classList.add('success');
-    } else {
-        ageHint.textContent = 'Возраст: ' + age + ' лет (минимум 18)';
-        ageHint.classList.remove('success');
-    }
-}
-
-// Сохранение профиля
-async function saveProfile() {
-    const name = document.getElementById('editName').value.trim();
-    const country = document.getElementById('editCountry').value;
-    const city = document.getElementById('editCity').value;
-    const bio = document.getElementById('editBio').value.trim();
-    
-    if (!name || name.length < 2) {
-        await showError('Введите имя (минимум 2 символа)');
-        return;
-    }
-    
-    if (!country) {
-        await showError('Выберите страну');
-        return;
-    }
-    
-    if (!city) {
-        await showError('Выберите город');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_URL}/users.php`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: currentUserId,
-                name: name,
-                country: country,
-                city: city,
-                avatar: selectedAvatar,
-                bio: bio
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            currentUser.name = name;
-            currentUser.country = country;
-            currentUser.city = city;
-            currentUser.avatar = selectedAvatar;
-            currentUser.bio = bio;
-            
-            localStorage.setItem('meetgo_user', JSON.stringify(currentUser));
-            
-            await showSuccess('Профиль обновлен!');
-            showScreen('profileScreen');
-            updateProfileDisplay();
-        } else {
-            await showError(data.error || 'Ошибка обновления профиля');
-        }
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        await showError('Ошибка подключения к серверу');
-    }
-}
-
-// Обновление отображения профиля
-function updateProfileDisplay() {
-    if (!currentUser) return;
-    
-    const genderText = currentUser.gender === 'male' ? 'М' : currentUser.gender === 'female' ? 'Ж' : '';
-    
-    document.getElementById('profileAvatar').textContent = currentUser.avatar || '👤';
-    document.getElementById('profileName').textContent = currentUser.name || 'Пользователь';
-    document.getElementById('profileAge').textContent = (currentUser.age || '--') + ' лет ' + genderText;
-    document.getElementById('profileLocation').textContent = 
-        `${currentUser.city || '--'}, ${currentUser.country || '--'}`;
-}
-
 // ============================================
-// ПРОСМОТР ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ
+// ОТКРЫТИЕ ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ
 // ============================================
-
 async function openUserProfile(userId) {
     viewingUserId = userId;
     
@@ -197,6 +17,7 @@ async function openUserProfile(userId) {
         if (data.success && data.user) {
             const user = data.user;
             
+            // Заполняем профиль
             document.getElementById('userProfileAvatar').textContent = user.avatar || '👤';
             document.getElementById('userProfileName').textContent = user.name || 'Пользователь';
             document.getElementById('userProfileAge').textContent = user.age || '?';
@@ -204,6 +25,7 @@ async function openUserProfile(userId) {
             document.getElementById('userProfileLocation').textContent = '📍 ' + (user.city || '') + (user.city && user.country ? ', ' : '') + (user.country || 'Не указано');
             document.getElementById('userProfileBio').textContent = user.bio || 'Пользователь пока ничего не написал о себе';
             
+            // Онлайн статус
             const onlineEl = document.getElementById('userProfileOnline');
             if (user.is_online) {
                 onlineEl.innerHTML = '<span class="online-dot"></span> В сети';
@@ -213,9 +35,11 @@ async function openUserProfile(userId) {
                 onlineEl.classList.add('offline');
             }
             
+            // Скрываем/показываем кнопки в зависимости от того, свой это профиль или чужой
             const reportBtn = document.getElementById('userProfileReportBtn');
             const chatBtn = document.getElementById('userProfileChatBtn');
             const editBioBtn = document.getElementById('editBioBtn');
+            
             if (userId === currentUserId) {
                 reportBtn.style.display = 'none';
                 chatBtn.style.display = 'none';
@@ -226,8 +50,10 @@ async function openUserProfile(userId) {
                 editBioBtn.style.display = 'none';
             }
             
+            // Загружаем посты пользователя
             await loadUserPosts(userId);
             
+            // Показываем экран профиля
             showScreen('userProfileScreen');
         } else {
             await showError('Не удалось загрузить профиль');
@@ -238,6 +64,9 @@ async function openUserProfile(userId) {
     }
 }
 
+// ============================================
+// ЗАГРУЗКА ПОСТОВ ПОЛЬЗОВАТЕЛЯ
+// ============================================
 async function loadUserPosts(userId) {
     const postsContainer = document.getElementById('userProfilePosts');
     
@@ -246,29 +75,93 @@ async function loadUserPosts(userId) {
         const data = await response.json();
         
         if (data.success && data.posts && data.posts.length > 0) {
-            postsContainer.innerHTML = data.posts.map(post => `
-                <div class="user-profile-post-card" onclick="openPostDetail(${post.id}, ${userId})">
-                    <div class="user-profile-post-text">${post.text.length > 100 ? post.text.substring(0, 100) + '...' : post.text}</div>
-                    ${post.photo ? '<div class="user-profile-post-has-photo">📷 Есть фото</div>' : ''}
-                    <div class="user-profile-post-time">
-                        ${formatTimeAgo(post.minutes_ago)} • осталось ${formatMinutesToTime(post.minutes_left)}
+            postsContainer.innerHTML = data.posts.map(post => {
+                // Парсим фотографии (поддержка разделителя |||)
+                const photos = parsePhotos(post.photo);
+                const photoCount = photos.length;
+                
+                // Генерируем HTML для фотографий
+                let photosHtml = '';
+                if (photoCount > 0) {
+                    if (photoCount === 1) {
+                        // Одно фото - показываем превью
+                        photosHtml = `
+                            <div class="user-profile-post-photos">
+                                <div class="user-profile-post-photo">
+                                    <img src="${photos[0]}" alt="Фото" loading="lazy">
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Несколько фото - горизонтальный скролл
+                        photosHtml = `
+                            <div class="user-profile-post-photos-scroll">
+                                ${photos.map((photo, index) => `
+                                    <div class="user-profile-post-photo-item">
+                                        <img src="${photo}" alt="Фото ${index + 1}" loading="lazy">
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="user-profile-post-photo-count">📷 ${photoCount} фото</div>
+                        `;
+                    }
+                }
+                
+                return `
+                    <div class="user-profile-post-card" onclick="openPostDetail(${post.id}, ${userId})">
+                        <div class="user-profile-post-text">${post.text.length > 150 ? post.text.substring(0, 150) + '...' : post.text}</div>
+                        ${photosHtml}
+                        <div class="user-profile-post-time">
+                            ${formatTimeAgo(post.minutes_ago)} • осталось ${formatMinutesToTime(post.minutes_left)}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         } else {
             postsContainer.innerHTML = '<div class="user-profile-no-posts">Нет активных объявлений</div>';
         }
     } catch (error) {
+        console.error('Error loading user posts:', error);
         postsContainer.innerHTML = '<div class="user-profile-no-posts">Ошибка загрузки объявлений</div>';
     }
 }
 
+// ============================================
+// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: Парсинг фотографий
+// ============================================
+function parsePhotos(photoString) {
+    const photos = [];
+    
+    if (!photoString || photoString === 'null' || photoString === '' || photoString === 'undefined') {
+        return photos;
+    }
+    
+    // Проверяем есть ли несколько фото (разделитель |||)
+    if (photoString.includes('|||')) {
+        const photoArray = photoString.split('|||');
+        photoArray.forEach(p => {
+            if (p && p.trim()) {
+                photos.push(p.trim());
+            }
+        });
+    } else {
+        photos.push(photoString);
+    }
+    
+    return photos;
+}
+
+// ============================================
+// ЗАКРЫТИЕ ПРОФИЛЯ
+// ============================================
 function closeUserProfile() {
     viewingUserId = null;
     showScreen('mainScreen');
 }
 
-// Открытие детального просмотра поста
+// ============================================
+// ДЕТАЛЬНЫЙ ПРОСМОТР ПОСТА
+// ============================================
 async function openPostDetail(postId, userId) {
     try {
         const response = await fetch(`${API_URL}/posts.php?user_id=${userId}`);
@@ -286,26 +179,123 @@ async function openPostDetail(postId, userId) {
     }
 }
 
+// ============================================
+// МОДАЛЬНОЕ ОКНО ПОСТА
+// ============================================
 function showPostDetailModal(post) {
     const modal = document.getElementById('postDetailModal');
+    const container = modal.querySelector('.post-detail-modal') || modal;
     
-    document.getElementById('postDetailAvatar').textContent = post.avatar || '👤';
-    document.getElementById('postDetailName').textContent = post.name;
-    document.getElementById('postDetailAge').textContent = post.age + ' лет';
-    document.getElementById('postDetailText').textContent = post.text;
-    document.getElementById('postDetailTime').textContent = formatTimeAgo(post.minutes_ago) + ' • осталось ' + formatMinutesToTime(post.minutes_left);
+    // Парсим фотографии
+    const photos = parsePhotos(post.photo);
+    const hasPhotos = photos.length > 0;
     
-    const photoContainer = document.getElementById('postDetailPhoto');
-    if (post.photo && post.photo !== 'null' && post.photo !== '') {
-        photoContainer.innerHTML = `<img src="${post.photo}" alt="Фото" style="width: 100%; border-radius: 12px;">`;
-        photoContainer.style.display = 'block';
-    } else {
-        photoContainer.style.display = 'none';
+    // Данные пользователя
+    const isOnline = post.is_online === 1 || post.is_online === '1';
+    const onlineClass = isOnline ? 'online' : 'offline';
+    const genderIcon = post.gender === 'male' ? '♂' : post.gender === 'female' ? '♀' : '';
+    
+    // Генерируем HTML для фотографий в модалке
+    let photosHtml = '';
+    if (hasPhotos) {
+        photosHtml = `
+            <div class="post-detail-photos">
+                <div class="post-detail-photos-scroll" id="postDetailPhotosScroll">
+                    ${photos.map((photo, index) => `
+                        <div class="post-detail-photo-item">
+                            <img src="${photo}" alt="Фото ${index + 1}" loading="lazy">
+                        </div>
+                    `).join('')}
+                </div>
+                ${photos.length > 1 ? `
+                    <div class="post-detail-photo-indicators">
+                        ${photos.map((_, index) => `
+                            <div class="post-detail-photo-indicator ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
     
+    // Собираем полный HTML модалки
+    container.innerHTML = `
+        <div class="post-detail-close" onclick="closePostDetail()">✕</div>
+        
+        <div class="post-detail-content">
+            <div class="post-detail-user">
+                <div class="post-detail-avatar">
+                    ${post.avatar || '👤'}
+                    <div class="post-detail-online-badge ${onlineClass}"></div>
+                </div>
+                <div class="post-detail-user-info">
+                    <div class="post-detail-name">${post.name || 'Пользователь'}</div>
+                    <div class="post-detail-meta">
+                        <span>${genderIcon} ${post.age} лет</span>
+                        <span>📍 ${post.city || ''}${post.city && post.country ? ', ' : ''}${post.country || ''}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-detail-text">${post.text}</div>
+            
+            ${photosHtml}
+            
+            <div class="post-detail-time">
+                <span>⏱ Осталось ${formatMinutesToTime(post.minutes_left)}</span>
+                <span>• ${formatTimeAgo(post.minutes_ago)}</span>
+            </div>
+            
+            <div class="post-detail-actions">
+                <button class="post-detail-btn post-detail-btn-chat" onclick="openChat(${post.user_id}); closePostDetail();">
+                    💬 Написать
+                </button>
+            </div>
+        </div>
+    `;
+    
     modal.classList.add('active');
+    
+    // Инициализируем скролл фотографий если их больше 1
+    if (photos.length > 1) {
+        initPostDetailPhotoScroll();
+    }
 }
 
+// ============================================
+// ИНИЦИАЛИЗАЦИЯ СКРОЛЛА ФОТОГРАФИЙ В МОДАЛКЕ
+// ============================================
+function initPostDetailPhotoScroll() {
+    const scrollContainer = document.getElementById('postDetailPhotosScroll');
+    const indicators = document.querySelectorAll('.post-detail-photo-indicator');
+    
+    if (!scrollContainer || indicators.length === 0) return;
+    
+    scrollContainer.addEventListener('scroll', () => {
+        const scrollLeft = scrollContainer.scrollLeft;
+        const itemWidth = scrollContainer.offsetWidth;
+        const currentIndex = Math.round(scrollLeft / itemWidth);
+        
+        indicators.forEach((ind, index) => {
+            ind.classList.toggle('active', index === currentIndex);
+        });
+    });
+    
+    // Клик по индикатору
+    indicators.forEach((ind, index) => {
+        ind.addEventListener('click', () => {
+            const itemWidth = scrollContainer.offsetWidth;
+            scrollContainer.scrollTo({
+                left: itemWidth * index,
+                behavior: 'smooth'
+            });
+        });
+    });
+}
+
+// ============================================
+// ЗАКРЫТИЕ МОДАЛКИ ПОСТА
+// ============================================
 function closePostDetail() {
     document.getElementById('postDetailModal').classList.remove('active');
     currentDetailPost = null;
@@ -314,15 +304,20 @@ function closePostDetail() {
 // ============================================
 // РЕДАКТИРОВАНИЕ "О СЕБЕ"
 // ============================================
-
 function editBio() {
     const currentBio = document.getElementById('userProfileBio').textContent;
     const textarea = document.getElementById('editBioTextarea');
     textarea.value = currentBio === 'Пользователь пока ничего не написал о себе' ? '' : currentBio;
-    document.getElementById('bioCharCount').textContent = textarea.value.length;
+    
+    const charCount = document.getElementById('bioCharCount');
+    if (charCount) {
+        charCount.textContent = textarea.value.length;
+    }
     
     textarea.oninput = function() {
-        document.getElementById('bioCharCount').textContent = this.value.length;
+        if (charCount) {
+            charCount.textContent = this.value.length;
+        }
     };
     
     document.getElementById('editBioModal').classList.add('active');
@@ -362,12 +357,18 @@ async function saveBio() {
     }
 }
 
+// ============================================
+// ОТКРЫТЬ ЧАТ С ПОЛЬЗОВАТЕЛЕМ
+// ============================================
 function openChatWithUser() {
     if (viewingUserId) {
         openChat(viewingUserId);
     }
 }
 
+// ============================================
+// ЖАЛОБА НА ПОЛЬЗОВАТЕЛЯ
+// ============================================
 async function reportUser() {
     if (!viewingUserId) return;
     
@@ -402,4 +403,19 @@ async function reportUser() {
             await showError('Ошибка отправки жалобы');
         }
     }
+}
+
+// ============================================
+// ОБНОВЛЕНИЕ ОТОБРАЖЕНИЯ СВОЕГО ПРОФИЛЯ
+// ============================================
+function updateProfileDisplay() {
+    if (!currentUser) return;
+    
+    const genderText = currentUser.gender === 'male' ? 'М' : currentUser.gender === 'female' ? 'Ж' : '';
+    
+    document.getElementById('profileAvatar').textContent = currentUser.avatar || '👤';
+    document.getElementById('profileName').textContent = currentUser.name || 'Пользователь';
+    document.getElementById('profileAge').textContent = (currentUser.age || '--') + ' лет ' + genderText;
+    document.getElementById('profileLocation').textContent = 
+        `${currentUser.city || '--'}, ${currentUser.country || '--'}`;
 }
