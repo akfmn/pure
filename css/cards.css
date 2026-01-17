@@ -1,0 +1,370 @@
+/* ============================================
+   CARDS - Post Cards and Filters
+   ============================================ */
+
+/* Filter Carousel */
+.filter-carousel {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 0;
+}
+
+.filter-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-item {
+    padding: 6px 14px;
+    background: #2a2a2a;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid #333;
+}
+
+.filter-item.active {
+    background: #1a3a1a;
+    color: #4ade80;
+    border-color: #4ade80;
+}
+
+.filter-item:active {
+    transform: scale(0.95);
+}
+
+/* ============================================
+   PURE-STYLE SWIPEABLE CARD
+   ============================================ */
+
+.request-card {
+    background: #1a1a1a;
+    border-radius: 20px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: 1px solid #252525;
+}
+
+.card-swiper {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.card-swiper::-webkit-scrollbar {
+    display: none;
+}
+
+.card-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    min-width: 100%;
+}
+
+/* Slide 1: User Info */
+.card-user-slide {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    cursor: pointer;
+}
+
+.card-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 15px;
+    border: 3px solid #333;
+    position: relative;
+}
+
+.card-avatar .online-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid #1a1a1a;
+}
+
+.card-avatar .online-badge.online {
+    background: #4ade80;
+}
+
+.card-avatar .online-badge.offline {
+    background: #6b7280;
+}
+
+.card-user-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.card-user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+    font-size: 15px;
+    margin-bottom: 6px;
+}
+
+.card-user-info .gender-icon {
+    font-size: 16px;
+}
+
+.card-user-location {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.card-user-registered {
+    color: #555;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+.card-user-distance {
+    background: #2a2a2a;
+    padding: 6px 14px;
+    border-radius: 20px;
+    color: #4ade80;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 12px;
+}
+
+/* Slide 2: Post Content */
+.card-content-slide {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+}
+
+.card-timer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.card-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 20px;
+    color: #ff9500;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.card-timer-icon {
+    font-size: 16px;
+}
+
+.card-posted-time {
+    color: #666;
+    font-size: 13px;
+}
+
+.card-text {
+    color: #eee;
+    font-size: 16px;
+    line-height: 1.6;
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #2a2a2a;
+}
+
+.card-action-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.card-action-btn:active {
+    transform: scale(0.9);
+    background: #3a3a3a;
+}
+
+/* Slide 3: Photos */
+.card-photos-slide {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 280px;
+}
+
+.card-photos-grid {
+    display: grid;
+    gap: 8px;
+    flex: 1;
+}
+
+.card-photos-grid.photos-1 {
+    grid-template-columns: 1fr;
+}
+
+.card-photos-grid.photos-2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.card-photos-grid.photos-3 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+.card-photos-grid.photos-3 .card-photo:first-child {
+    grid-row: span 2;
+}
+
+.card-photo {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #2a2a2a;
+    position: relative;
+    min-height: 120px;
+}
+
+.card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-no-photos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #555;
+}
+
+.card-no-photos-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.card-no-photos-text {
+    font-size: 14px;
+}
+
+/* Slide Indicators */
+.card-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    background: #151515;
+}
+
+.card-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #333;
+    transition: all 0.3s;
+}
+
+.card-indicator.active {
+    background: #4ade80;
+    width: 20px;
+    border-radius: 4px;
+}
+
+/* Pull-to-Refresh */
+.pull-to-refresh-indicator {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #0a0a0a;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(0);
+}
+
+.pull-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #333;
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.pull-text {
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Online indicator (legacy support) */
+.online-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.online-indicator.online {
+    background: #4ade80;
+    box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
+}
+
+.online-indicator.offline {
+    background: #6b7280;
+}

@@ -1,0 +1,332 @@
+/* ============================================
+   MODALS - Modal Windows and Popups
+   ============================================ */
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-container {
+    background: #1a1a1a;
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 340px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+.modal-content {
+    text-align: center;
+}
+
+.modal-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.modal-title {
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.modal-message {
+    color: #ccc;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 25px;
+    white-space: pre-wrap;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-button {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.modal-button-primary {
+    background: white;
+    color: #0a0a0a;
+}
+
+.modal-button-primary:active {
+    transform: scale(0.95);
+    background: #e0e0e0;
+}
+
+.modal-button-secondary {
+    background: #2a2a2a;
+    color: white;
+}
+
+.modal-button-secondary:active {
+    transform: scale(0.95);
+    background: #3a3a3a;
+}
+
+/* Menu Popup */
+.menu-popup {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1a1a1a;
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+}
+
+.menu-popup.active {
+    transform: translateY(0);
+}
+
+.menu-popup-header {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.menu-popup-item {
+    padding: 15px;
+    background: #2a2a2a;
+    border-radius: 12px;
+    color: #ff4444;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+}
+
+.menu-popup-item:active {
+    background: #333;
+}
+
+.menu-popup-cancel {
+    padding: 15px;
+    background: #2a2a2a;
+    border-radius: 12px;
+    color: #999;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.menu-popup-cancel:active {
+    background: #333;
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 999;
+}
+
+.menu-overlay.active {
+    display: block;
+}
+
+/* Post Detail Modal */
+.post-detail-modal {
+    background: #1a1a1a;
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 380px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+.post-detail-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
+
+.post-detail-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-size: 16px;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: -5px;
+}
+
+.post-detail-close:active {
+    background: #3a3a3a;
+}
+
+.post-detail-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.post-detail-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.post-detail-user-info {
+    flex: 1;
+}
+
+.post-detail-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+}
+
+.post-detail-age {
+    font-size: 14px;
+    color: #888;
+}
+
+.post-detail-photo {
+    margin-bottom: 15px;
+}
+
+.post-detail-photo img {
+    width: 100%;
+    border-radius: 12px;
+}
+
+.post-detail-text {
+    font-size: 16px;
+    color: #eee;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    white-space: pre-wrap;
+}
+
+.post-detail-time {
+    font-size: 13px;
+    color: #666;
+}
+
+/* Edit Bio Modal */
+.edit-bio-modal {
+    background: #1a1a1a;
+    border-radius: 20px;
+    padding: 25px;
+    max-width: 380px;
+    width: 90%;
+    animation: slideUp 0.3s ease;
+}
+
+.edit-bio-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.edit-bio-textarea {
+    width: 100%;
+    height: 150px;
+    background: #0a0a0a;
+    border: 2px solid #2a2a2a;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    padding: 15px;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+}
+
+.edit-bio-textarea:focus {
+    border-color: #fff;
+}
+
+.edit-bio-counter {
+    text-align: right;
+    color: #666;
+    font-size: 12px;
+    margin-top: 8px;
+    margin-bottom: 20px;
+}
+
+.edit-bio-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.edit-bio-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.edit-bio-btn-cancel {
+    background: #2a2a2a;
+    color: #888;
+}
+
+.edit-bio-btn-save {
+    background: white;
+    color: #0a0a0a;
+}
+
+.edit-bio-btn:active {
+    transform: scale(0.98);
+}

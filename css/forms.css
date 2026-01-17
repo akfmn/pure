@@ -1,0 +1,225 @@
+/* ============================================
+   FORMS - Inputs, Selects, Buttons
+   ============================================ */
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-label {
+    color: #999;
+    font-size: 14px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.form-input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 12px;
+    color: white;
+    font-size: 16px;
+    font-family: inherit;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3a3a3a;
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.form-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+textarea.form-input {
+    min-height: 120px;
+    resize: none;
+}
+
+.form-hint {
+    color: #666;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.form-hint.error {
+    color: #ff4444;
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Duration Input */
+.duration-input-container {
+    padding: 10px 0;
+}
+
+.duration-inputs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.time-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-input {
+    width: 80px;
+    height: 60px;
+    background: #2a2a2a;
+    border: 2px solid #3a3a3a;
+    border-radius: 12px;
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    font-family: inherit;
+    padding: 0;
+}
+
+.time-input:focus {
+    outline: none;
+    border-color: #4a4a4a;
+    background: #333;
+}
+
+.time-input::-webkit-inner-spin-button,
+.time-input::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 50px;
+}
+
+.time-separator {
+    font-size: 32px;
+    font-weight: 700;
+    color: #666;
+    padding-bottom: 25px;
+}
+
+.time-label {
+    color: #999;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.duration-hint {
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+}
+
+.duration-hint.error {
+    color: #ff4444;
+}
+
+/* Photo Upload */
+.photo-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.photo-upload-preview {
+    width: 100%;
+    height: 200px;
+    background: #1a1a1a;
+    border: 2px dashed #3a3a3a;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    overflow: hidden;
+}
+
+.photo-upload-preview:hover {
+    border-color: #4a4a4a;
+    background: #1f1f1f;
+}
+
+.photo-upload-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-upload-placeholder {
+    text-align: center;
+    color: #666;
+}
+
+.photo-remove-btn {
+    padding: 10px 20px;
+    background: #4a2a2a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.photo-remove-btn:hover {
+    background: #5a3a3a;
+}
+
+/* Range Slider */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: #3a3a3a;
+    border-radius: 3px;
+}
+
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: #3a3a3a;
+    border-radius: 3px;
+}

@@ -32,6 +32,7 @@ try {
                         u.latitude,
                         u.longitude,
                         u.last_active,
+                        u.created_at as user_created_at,
                         TIMESTAMPDIFF(MINUTE, u.last_active, NOW()) as minutes_since_active,
                         IF(TIMESTAMPDIFF(MINUTE, u.last_active, NOW()) <= 5, 1, 0) as is_online,
                         GREATEST(0, TIMESTAMPDIFF(MINUTE, NOW(), p.expires_at)) as minutes_left,

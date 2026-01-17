@@ -1,0 +1,252 @@
+/* ============================================
+   AUTH - Login & Registration Styles
+   ============================================ */
+
+.login-screen, .register-screen {
+    background: #0a0a0a;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+}
+
+.register-screen {
+    padding-top: 300px;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 0px 30px 40px;
+}
+
+.auth-logo {
+    font-size: 48px;
+    font-weight: 900;
+    color: white;
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+.auth-subtitle {
+    color: #999;
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 40px;
+}
+
+.auth-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.auth-title {
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    flex: 1;
+    text-align: center;
+}
+
+.auth-form {
+    margin-bottom: 30px;
+}
+
+.auth-form .form-group {
+    margin-bottom: 15px;
+}
+
+.auth-button {
+    width: 100%;
+    padding: 16px;
+    background: white;
+    color: #0a0a0a;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.auth-button:active {
+    transform: scale(0.98);
+    background: #e0e0e0;
+}
+
+.auth-switch {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+}
+
+.auth-switch span {
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.auth-forgot {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.auth-forgot span {
+    color: #888;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.auth-forgot span:active {
+    color: #aaa;
+}
+
+/* Gender Selector */
+.gender-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.gender-option {
+    background: #1a1a1a;
+    border: 2px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gender-option:active {
+    transform: scale(0.97);
+}
+
+.gender-option.selected {
+    border-color: white;
+    background: #2a2a2a;
+}
+
+.gender-icon {
+    font-size: 28px;
+    color: #999;
+}
+
+.gender-option.selected .gender-icon {
+    color: white;
+}
+
+.gender-label {
+    color: #999;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.gender-option.selected .gender-label {
+    color: white;
+}
+
+/* Recovery Modal */
+.recovery-modal {
+    background: linear-gradient(145deg, #1e1e1e, #151515);
+    border-radius: 24px;
+    padding: 35px 25px;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+    animation: slideUp 0.3s ease;
+    text-align: center;
+}
+
+.recovery-icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+    animation: bounceIn 0.5s ease;
+}
+
+.recovery-title {
+    color: white;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.recovery-message {
+    color: #999;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    padding: 0 10px;
+}
+
+.recovery-input-container {
+    margin-bottom: 25px;
+}
+
+.recovery-input {
+    width: 100%;
+    padding: 16px 20px;
+    background: #0a0a0a;
+    border: 2px solid #2a2a2a;
+    border-radius: 14px;
+    color: white;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.recovery-input:focus {
+    border-color: #fff;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+}
+
+.recovery-input::placeholder {
+    color: #666;
+}
+
+.recovery-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.recovery-btn {
+    flex: 1;
+    padding: 16px 20px;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.recovery-btn-cancel {
+    background: #2a2a2a;
+    color: #999;
+}
+
+.recovery-btn-cancel:active {
+    transform: scale(0.95);
+    background: #3a3a3a;
+}
+
+.recovery-btn-send {
+    background: linear-gradient(135deg, #ffffff, #e0e0e0);
+    color: #0a0a0a;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.recovery-btn-send:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+}

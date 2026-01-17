@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Meet&Go">
     <meta name="description" content="Знакомства здесь и сейчас">
     <link rel="manifest" href="manifest.json">
-	<link rel="stylesheet" href="style.css?v=25">
+    <link rel="stylesheet" href="style.css?v=26">
     <title>Meet&Go Dating</title>
 </head>
 <body>
@@ -93,8 +93,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">Дата рождения</label>
-                        <input type="date" class="form-input" id="regBirthdate" 
-                               max="" onchange="validateAge()">
+                        <input type="date" class="form-input" id="regBirthdate" max="" onchange="validateAge()">
                         <div class="form-hint" id="ageHint">Минимум 18 лет</div>
                     </div>
                     
@@ -136,106 +135,19 @@
                     <div class="filter-carousel">
                         <div class="filter-item" onclick="selectFilter(this, 'my')">◆ Мои</div>
                         <div class="filter-item active" onclick="selectFilter(this, 'nearby')">⦿ Рядом</div>
+                        <div class="filter-item" onclick="selectFilter(this, 'online')">● Онлайн</div>
                         <div class="filter-item" onclick="selectFilter(this, 'new')">✦ Новые</div>
                         <div class="filter-item" id="ageFilterBtn" onclick="selectFilter(this, 'age')">◉ Возраст</div>
                     </div>
                 </div>
             </div>
             
-            <!-- Pull-to-Refresh Indicator -->
             <div class="pull-to-refresh-indicator" id="pullIndicator">
                 <div class="pull-spinner"></div>
                 <div class="pull-text">Обновление...</div>
             </div>
             
-            <div class="content" id="mainContent">
-                <div class="request-card" onclick="openRequest(0)">
-                    <div class="card-image">А</div>
-                    <div class="card-content">
-                        <div class="card-header">
-                            <div>
-                                <span class="card-name">Анна</span>
-                                <span class="card-age">25</span>
-                            </div>
-                            <div class="card-distance">Киев</div>
-                        </div>
-                        <div class="card-text">
-                            Ищу компанию для прогулки по вечернему городу. Люблю интересные разговоры и новые знакомства ✨
-                        </div>
-                        <div class="card-time">
-                            <div class="card-time-left">
-                                <span>23 минуты назад</span>
-                                <span class="card-timer">
-                                    <span class="card-timer-icon">⏱</span>
-                                    <span class="post-timer" data-end="37">0:37:00</span>
-                                </span>
-                            </div>
-                            <div class="card-actions">
-                                <span class="chat-icon" onclick="event.stopPropagation(); openChat(0)">💬</span>
-                                <span class="menu-dots" onclick="event.stopPropagation(); showMenu(event, 0)">⋮</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="request-card" onclick="openRequest(1)">
-                    <div class="card-image">Д</div>
-                    <div class="card-content">
-                        <div class="card-header">
-                            <div>
-                                <span class="card-name">Дмитрий</span>
-                                <span class="card-age">28</span>
-                            </div>
-                            <div class="card-distance">Одесса</div>
-                        </div>
-                        <div class="card-text">
-                            Есть кто на концерт сегодня вечером? Есть лишний билет, не хочу идти один 🎵
-                        </div>
-                        <div class="card-time">
-                            <div class="card-time-left">
-                                <span>45 минут назад</span>
-                                <span class="card-timer">
-                                    <span class="card-timer-icon">⏱</span>
-                                    <span class="post-timer" data-end="15">0:15:00</span>
-                                </span>
-                            </div>
-                            <div class="card-actions">
-                                <span class="chat-icon" onclick="event.stopPropagation(); openChat(1)">💬</span>
-                                <span class="menu-dots" onclick="event.stopPropagation(); showMenu(event, 1)">⋮</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="request-card" onclick="openRequest(2)">
-                    <div class="card-image">М</div>
-                    <div class="card-content">
-                        <div class="card-header">
-                            <div>
-                                <span class="card-name">Мария</span>
-                                <span class="card-age">23</span>
-                            </div>
-                            <div class="card-distance">Львов</div>
-                        </div>
-                        <div class="card-text">
-                            Кто за кофе прямо сейчас? Рядом отличная кофейня, хочу поболтать
-                        </div>
-                        <div class="card-time">
-                            <div class="card-time-left">
-                                <span>1 час назад</span>
-                                <span class="card-timer">
-                                    <span class="card-timer-icon">⏱</span>
-                                    <span class="post-timer" data-end="120">2:00:00</span>
-                                </span>
-                            </div>
-                            <div class="card-actions">
-                                <span class="chat-icon" onclick="event.stopPropagation(); openChat(2)">💬</span>
-                                <span class="menu-dots" onclick="event.stopPropagation(); showMenu(event, 2)">⋮</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="content" id="mainContent"></div>
 
             <div class="bottom-nav">
                 <div class="nav-item active" onclick="goToMainAndRefresh()">
@@ -281,9 +193,7 @@
                                 <div style="font-size: 14px; color: #999;">Нажмите для добавления фото</div>
                             </div>
                         </div>
-                        <button class="photo-remove-btn" id="postPhotoRemoveBtn" onclick="removePostPhoto()" style="display: none;">
-                            ✕ Удалить фото
-                        </button>
+                        <button class="photo-remove-btn" id="postPhotoRemoveBtn" onclick="removePostPhoto()" style="display: none;">✕ Удалить фото</button>
                     </div>
                 </div>
 
@@ -292,16 +202,12 @@
                     <div class="duration-input-container">
                         <div class="duration-inputs">
                             <div class="time-input-group">
-                                <input type="number" class="time-input" id="hoursInput" 
-                                       min="0" max="24" value="1" 
-                                       oninput="validateDuration()">
+                                <input type="number" class="time-input" id="hoursInput" min="0" max="24" value="1" oninput="validateDuration()">
                                 <label class="time-label">часов</label>
                             </div>
                             <div class="time-separator">:</div>
                             <div class="time-input-group">
-                                <input type="number" class="time-input" id="minutesInput" 
-                                       min="0" max="59" value="0" 
-                                       oninput="validateDuration()">
+                                <input type="number" class="time-input" id="minutesInput" min="0" max="59" value="0" oninput="validateDuration()">
                                 <label class="time-label">минут</label>
                             </div>
                         </div>
@@ -356,7 +262,6 @@
             </div>
 
             <div class="edit-profile-content">
-                <!-- Avatar Section -->
                 <div class="edit-section">
                     <label class="edit-label">Аватар</label>
                     <div class="avatar-picker">
@@ -375,23 +280,18 @@
                     </div>
                 </div>
 
-                <!-- Name -->
                 <div class="edit-section">
                     <label class="edit-label">Имя</label>
                     <input type="text" class="edit-input" id="editName" placeholder="Ваше имя">
                 </div>
 
-                <!-- Birthdate -->
                 <div class="edit-section">
                     <label class="edit-label">Дата рождения</label>
                     <input type="date" class="edit-input" id="editBirthdate" readonly style="background: #151515; color: #666; cursor: not-allowed;">
                     <div class="edit-hint" id="editAgeHint">Возраст: --</div>
-                    <div class="edit-hint" style="color: #999; margin-top: 5px;">
-                        💡 Дата рождения не может быть изменена. В профиле показывается только возраст.
-                    </div>
+                    <div class="edit-hint" style="color: #999; margin-top: 5px;">💡 Дата рождения не может быть изменена.</div>
                 </div>
 
-                <!-- Country -->
                 <div class="edit-section">
                     <label class="edit-label">Страна</label>
                     <select class="edit-input edit-select" id="editCountry" onchange="loadEditCities()">
@@ -399,7 +299,6 @@
                     </select>
                 </div>
 
-                <!-- City -->
                 <div class="edit-section">
                     <label class="edit-label">Город</label>
                     <select class="edit-input edit-select" id="editCity">
@@ -407,7 +306,6 @@
                     </select>
                 </div>
 
-                <!-- Bio -->
                 <div class="edit-section">
                     <label class="edit-label">О себе</label>
                     <textarea class="edit-input edit-textarea" id="editBio" placeholder="Расскажите о себе..." maxlength="500"></textarea>
@@ -415,7 +313,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
         <!-- Settings Screen -->
         <div class="screen" id="settingsScreen">
@@ -426,7 +323,6 @@
             </div>
             
             <div class="settings-content">
-                <!-- Change Password Section -->
                 <div class="settings-section">
                     <div class="settings-section-title">Безопасность</div>
                     
@@ -449,7 +345,6 @@
                     <button class="settings-button" onclick="changePassword()">Изменить пароль</button>
                 </div>
                 
-                <!-- Delete Account Section -->
                 <div class="settings-section" style="margin-top: 40px;">
                     <div class="settings-section-title" style="color: #ff4444;">Опасная зона</div>
                     
@@ -462,15 +357,13 @@
             </div>
         </div>
 
-        <!-- Password Verification Modal for Account Deletion -->
+        <!-- Password Verification Modal -->
         <div class="modal-overlay" id="passwordVerificationModal">
             <div class="modal-container">
                 <div class="modal-content">
                     <div class="modal-icon">🔒</div>
                     <div class="modal-title">Подтвердите пароль</div>
-                    <div class="modal-message" style="margin-bottom: 20px;">
-                        Введите ваш пароль для подтверждения удаления аккаунта
-                    </div>
+                    <div class="modal-message" style="margin-bottom: 20px;">Введите ваш пароль для подтверждения удаления аккаунта</div>
                     
                     <div class="form-group" style="text-align: left; margin-bottom: 20px;">
                         <input type="password" class="form-input" id="deleteAccountPassword" placeholder="Введите пароль" style="margin: 0;">
@@ -509,18 +402,12 @@
                 
                 <div class="user-profile-section">
                     <div class="user-profile-section-title">Активные объявления</div>
-                    <div class="user-profile-posts" id="userProfilePosts">
-                        <!-- Posts will be loaded here -->
-                    </div>
+                    <div class="user-profile-posts" id="userProfilePosts"></div>
                 </div>
                 
                 <div class="user-profile-actions">
-                    <button class="user-profile-btn user-profile-btn-chat" id="userProfileChatBtn" onclick="openChatWithUser()">
-                        💬 Написать сообщение
-                    </button>
-                    <button class="user-profile-btn user-profile-btn-report" id="userProfileReportBtn" onclick="reportUser()">
-                        ⚠ Пожаловаться
-                    </button>
+                    <button class="user-profile-btn user-profile-btn-chat" id="userProfileChatBtn" onclick="openChatWithUser()">💬 Написать сообщение</button>
+                    <button class="user-profile-btn user-profile-btn-report" id="userProfileReportBtn" onclick="reportUser()">⚠ Пожаловаться</button>
                 </div>
             </div>
         </div>
@@ -531,9 +418,7 @@
                 <div class="chats-back" onclick="goToMainAndRefresh()">←</div>
                 <div class="chats-title">Сообщения</div>
             </div>
-            <div class="chats-list" id="chatsList">
-                <!-- Чаты загружаются динамически -->
-            </div>
+            <div class="chats-list" id="chatsList"></div>
             <div class="chats-empty" id="chatsEmpty" style="display: none;">
                 <div class="chats-empty-icon">💬</div>
                 <div class="chats-empty-text">Пока нет сообщений</div>
@@ -554,14 +439,13 @@
                 </div>
                 <div class="chat-menu" onclick="showChatMenu()">⋮</div>
             </div>
-            <div class="chat-messages" id="chatMessages">
-                <!-- Сообщения загружаются динамически -->
-            </div>
+            <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-container">
                 <input type="text" class="chat-input" id="chatInput" placeholder="Сообщение..." maxlength="1000">
                 <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">➤</button>
             </div>
         </div>
+    </div>
 
     <!-- Menu Overlay -->
     <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
@@ -609,7 +493,7 @@
     <div class="menu-popup" id="menuPopup">
         <div class="menu-popup-header">Действия</div>
         <div class="menu-popup-item" id="deletePostItem" style="display: none; color: #ff4444;" onclick="deleteMyPost()">🗑 Удалить</div>
-        <div class="menu-popup-item" onclick="reportPost()">⚠  Пожаловаться</div>
+        <div class="menu-popup-item" onclick="reportPost()">⚠ Пожаловаться</div>
         <div class="menu-popup-cancel" onclick="closeMenu()">Отмена</div>
     </div>
 
@@ -620,29 +504,24 @@
                 <div class="modal-title">Фильтр по возрасту</div>
                 
                 <div style="padding: 20px 0;">
-                    <!-- Min Age Slider -->
                     <div style="margin-bottom: 30px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                             <span style="color: #999;">Минимальный возраст</span>
                             <span style="color: white; font-weight: 600;" id="minAgeValue">18</span>
                         </div>
                         <input type="range" id="minAgeSlider" min="18" max="80" value="18" 
-                               style="width: 100%; height: 6px; border-radius: 3px; background: #3a3a3a; 
-                                      -webkit-appearance: none; appearance: none; outline: none;">
+                               style="width: 100%; height: 6px; border-radius: 3px; background: #3a3a3a; -webkit-appearance: none; appearance: none; outline: none;">
                     </div>
                     
-                    <!-- Max Age Slider -->
                     <div style="margin-bottom: 20px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                             <span style="color: #999;">Максимальный возраст</span>
                             <span style="color: white; font-weight: 600;" id="maxAgeValue">80</span>
                         </div>
                         <input type="range" id="maxAgeSlider" min="18" max="80" value="80"
-                               style="width: 100%; height: 6px; border-radius: 3px; background: #3a3a3a;
-                                      -webkit-appearance: none; appearance: none; outline: none;">
+                               style="width: 100%; height: 6px; border-radius: 3px; background: #3a3a3a; -webkit-appearance: none; appearance: none; outline: none;">
                     </div>
                     
-                    <!-- Age Range Display -->
                     <div style="text-align: center; padding: 15px; background: #2a2a2a; border-radius: 10px; margin-top: 20px;">
                         <span style="color: #999; font-size: 14px;">Выбран диапазон: </span>
                         <span style="color: white; font-weight: 700; font-size: 18px;" id="ageRangeDisplay">18 - 80 лет</span>
@@ -668,9 +547,7 @@
                         <canvas id="cropCanvas" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;"></canvas>
                     </div>
                     
-                    <div style="margin-top: 20px; color: #999; font-size: 14px; text-align: center;">
-                        Перетаскивайте область для обрезки
-                    </div>
+                    <div style="margin-top: 20px; color: #999; font-size: 14px; text-align: center;">Перетаскивайте область для обрезки</div>
                 </div>
                 
                 <div class="modal-buttons">
@@ -695,6 +572,18 @@
             </div>
         </div>
     </div>
-    <script src="script.js?v=19"></script>
+
+    <!-- JavaScript Modules -->
+    <script src="js/config.js?v=1"></script>
+    <script src="js/modals.js?v=1"></script>
+    <script src="js/geolocation.js?v=1"></script>
+    <script src="js/auth.js?v=1"></script>
+    <script src="js/profile.js?v=1"></script>
+    <script src="js/settings.js?v=1"></script>
+    <script src="js/posts.js?v=1"></script>
+    <script src="js/chats.js?v=1"></script>
+    <script src="js/ui.js?v=1"></script>
+    <script src="js/create-post.js?v=1"></script>
+    <script src="js/app.js?v=1"></script>
 </body>
 </html>
