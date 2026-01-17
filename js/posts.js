@@ -2,9 +2,29 @@
 // ПОСТЫ
 // ============================================
 
+// Хранилище позиций скролла карточек (по post.id)
+let cardScrollPositions = {};
+
 // Получение серверного времени
 function getServerTime() {
     return new Date(Date.now() + serverTimeOffset);
+}
+
+// Сохранение позиций скролла всех карточек
+function saveCardScrollPositions() {
+    const cards = document.querySelectorAll('.card-scroll-container');
+    cards.forEach(container => {
+        const postId = container.dataset.cardId;
+        if (postId) {
+            const sections = container.querySelectorAll('.card-section:not(.clone)');
+            if (sections.length > 0) {
+                const sectionWidth = sections[0].offsetWidth;
+                const currentSection = Math.round(container.scrollLeft / sectionWidth) - 1; // -1 из-за клона
+                const normalizedSection = ((currentSection % 3) + 3) % 3;
+                cardScrollPositions[postId] = normalizedSection;
+            }
+        }
+    });
 }
 
 // Загрузка постов с сервера
@@ -115,6 +135,10 @@ async function loadPostsFromServer() {
 // Отображение постов на странице
 function displayPosts(posts) {
     const content = document.getElementById('mainContent');
+    
+    // Сохраняем позиции скролла карточек перед обновлением
+    saveCardScrollPositions();
+    
     content.innerHTML = '';
     
     if (posts.length === 0 && currentFilter === 'my') {
@@ -183,10 +207,34 @@ function displayPosts(posts) {
         content.appendChild(card);
     });
     
+    // Восстанавливаем позиции скролла карточек
+    restoreCardScrollPositions();
+    
     startPostTimersFromServer();
 }
 
-// Создание карточки поста
+// Восстановление позиций скролла карточек
+function restoreCardScrollPositions() {
+    setTimeout(() => {
+        const cards = document.querySelectorAll('.card-scroll-container');
+        cards.forEach(container => {
+            const postId = container.dataset.cardId;
+            if (postId && cardScrollPositions[postId] !== undefined) {
+                const sections = container.querySelectorAll('.card-section:not(.clone)');
+                if (sections.length > 0) {
+                    const sectionWidth = sections[0].offsetWidth;
+                    const targetSection = cardScrollPositions[postId];
+                    // +1 из-за клона в начале
+                    container.scrollLeft = sectionWidth * (targetSection + 1);
+                }
+            }
+        });
+    }, 50);
+}
+
+// ============================================
+// СОЗДАНИЕ КАРТОЧКИ ПОСТА - ШИРОКАЯ ГОРИЗОНТАЛЬНАЯ
+// ============================================
 function createPostCard(post) {
     const card = document.createElement('div');
     card.className = 'request-card';
@@ -211,106 +259,207 @@ function createPostCard(post) {
     const genderIcon = post.gender === 'male' ? '♂' : post.gender === 'female' ? '♀' : '';
     const genderText = post.gender === 'male' ? 'Мужчина' : post.gender === 'female' ? 'Женщина' : '';
     
-    // Дата регистрации (если есть created_at пользователя)
+    // Дата регистрации
     const registeredText = post.user_created_at ? formatRegisteredDate(post.user_created_at) : '';
     
-    // Фото - поддержка до 3х фото (пока только 1)
+    // Фото - поддержка нескольких фото через разделитель |||
     const photos = [];
     if (post.photo && post.photo !== 'null' && post.photo !== '' && post.photo !== 'undefined') {
-        photos.push(post.photo);
+        if (post.photo.includes('|||')) {
+            const photoArray = post.photo.split('|||');
+            photoArray.forEach(p => {
+                if (p && p.trim()) {
+                    photos.push(p.trim());
+                }
+            });
+        } else {
+            photos.push(post.photo);
+        }
     }
     
-    // Определяем количество слайдов (2 или 3 в зависимости от наличия фото)
     const hasPhotos = photos.length > 0;
-    const slideCount = hasPhotos ? 3 : 2;
     
-    card.innerHTML = `
-        <div class="card-swiper" data-card-id="${post.id}">
-            <!-- Slide 1: User Info -->
-            <div class="card-slide card-user-slide" onclick="openRequest(${post.id})">
-                <div class="card-avatar">
-                    ${post.avatar || '👤'}
-                    <div class="online-badge ${onlineClass}"></div>
-                </div>
-                <div class="card-user-name">${post.name}</div>
-                <div class="card-user-info">
-                    <span class="gender-icon">${genderIcon}</span>
-                    <span>${genderText}</span>
-                    <span>•</span>
-                    <span>${post.age} лет</span>
-                </div>
-                <div class="card-user-location">📍 ${post.city || ''}${post.city && post.country ? ', ' : ''}${post.country || ''}</div>
-                ${registeredText ? `<div class="card-user-registered">На сайте ${registeredText}</div>` : ''}
-                <div class="card-user-distance">${distanceText}</div>
+    // Секция профиля
+    const profileHtml = `
+        <div class="card-section card-section-profile" onclick="openRequest(${post.id})">
+            <div class="card-avatar">
+                ${post.avatar || '👤'}
+                <div class="online-badge ${onlineClass}"></div>
             </div>
-            
-            <!-- Slide 2: Post Content -->
-            <div class="card-slide card-content-slide">
-                <div class="card-timer-row">
-                    <div class="card-timer">
-                        <span class="card-timer-icon">⏱</span>
-                        <span class="post-timer" data-minutes-left="${post.minutes_left}" data-expires="${expiresAt}">
-                            ${formatMinutesToTime(post.minutes_left)}
-                        </span>
-                    </div>
-                    <div class="card-posted-time">${timeAgo}</div>
-                </div>
-                <div class="card-text">${post.text}</div>
-                <div class="card-actions">
-                    <div class="card-action-btn" onclick="event.stopPropagation(); openChat(${post.user_id})">💬</div>
-                    <div class="card-action-btn" onclick="event.stopPropagation(); showMenu(event, ${post.id}, ${post.user_id})">⋮</div>
-                </div>
+            <div class="card-user-name">${post.name}</div>
+            <div class="card-user-info">
+                <span class="gender-icon">${genderIcon}</span>
+                <span>${genderText}</span>
+                <span>•</span>
+                <span>${post.age} лет</span>
             </div>
-            
-            <!-- Slide 3: Photos -->
-            ${hasPhotos ? `
-            <div class="card-slide card-photos-slide">
-                <div class="card-photos-grid photos-${photos.length}">
-                    ${photos.map(photo => `
-                        <div class="card-photo">
-                            <img src="${photo}" alt="Фото" loading="lazy">
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            ` : `
-            <div class="card-slide card-photos-slide">
-                <div class="card-no-photos">
-                    <div class="card-no-photos-icon">📷</div>
-                    <div class="card-no-photos-text">Нет фотографий</div>
-                </div>
-            </div>
-            `}
-        </div>
-        
-        <!-- Slide Indicators -->
-        <div class="card-indicators">
-            <div class="card-indicator active" data-slide="0"></div>
-            <div class="card-indicator" data-slide="1"></div>
-            <div class="card-indicator" data-slide="2"></div>
+            <div class="card-user-location">📍 ${post.city || ''}${post.city && post.country ? ', ' : ''}${post.country || ''}</div>
+            ${registeredText ? `<div class="card-user-registered">На сайте ${registeredText}</div>` : ''}
+            <div class="card-user-distance">${distanceText}</div>
         </div>
     `;
     
-    // Добавляем обработчик скролла для индикаторов
-    const swiper = card.querySelector('.card-swiper');
-    const indicators = card.querySelectorAll('.card-indicator');
+    // Секция объявления
+    const postHtml = `
+        <div class="card-section card-section-post">
+            <div class="card-timer-row">
+                <div class="card-timer">
+                    <span class="card-timer-icon">⏱</span>
+                    <span class="post-timer" data-minutes-left="${post.minutes_left}" data-expires="${expiresAt}">
+                        ${formatMinutesToTime(post.minutes_left)}
+                    </span>
+                </div>
+                <div class="card-posted-time">${timeAgo}</div>
+            </div>
+            <div class="card-text">${post.text}</div>
+            <div class="card-actions">
+                <div class="card-action-btn" onclick="event.stopPropagation(); openChat(${post.user_id})">💬</div>
+                <div class="card-action-btn" onclick="event.stopPropagation(); showMenu(event, ${post.id}, ${post.user_id})">⋮</div>
+            </div>
+        </div>
+    `;
     
-    swiper.addEventListener('scroll', () => {
-        const scrollLeft = swiper.scrollLeft;
-        const slideWidth = swiper.offsetWidth;
-        const currentSlide = Math.round(scrollLeft / slideWidth);
+    // Собираем секции: Post, Profile, и каждое фото отдельно
+    let sectionsArray = [postHtml, profileHtml];
+    
+    // Добавляем каждое фото как отдельную секцию
+    photos.forEach((photo, index) => {
+        sectionsArray.push(`
+            <div class="card-section card-section-photo">
+                <div class="card-single-photo">
+                    <img src="${photo}" alt="Фото ${index + 1}" loading="lazy">
+                </div>
+            </div>
+        `);
+    });
+    
+    const totalSections = sectionsArray.length;
+    
+    // Создаём клоны для кругового скролла
+    const firstSectionClone = sectionsArray[0].replace('card-section-post', 'card-section-post clone clone-first');
+    const lastSectionClone = sectionsArray[totalSections - 1]
+        .replace('card-section-profile', 'card-section-profile clone clone-last')
+        .replace('card-section-photo', 'card-section-photo clone clone-last');
+    
+    // Собираем HTML: клон последней + все секции + клон первой
+    const sectionsHtml = [lastSectionClone, ...sectionsArray, firstSectionClone].join('');
+    
+    // Индикаторы
+    const indicatorsHtml = sectionsArray.map((_, index) => 
+        `<div class="card-scroll-indicator${index === 0 ? ' active' : ''}" data-section="${index}"></div>`
+    ).join('');
+
+    card.innerHTML = `
+        <!-- Горизонтальный скролл контейнер -->
+        <div class="card-scroll-container" data-card-id="${post.id}" data-total-sections="${totalSections}">
+            <div class="card-wide-content">
+                ${sectionsHtml}
+            </div>
+        </div>
         
+        <!-- Индикаторы позиции -->
+        <div class="card-scroll-indicators">
+            ${indicatorsHtml}
+        </div>
+    `;
+    
+    // Настройка кругового скролла
+    const scrollContainer = card.querySelector('.card-scroll-container');
+    const indicators = card.querySelectorAll('.card-scroll-indicator');
+    const sections = card.querySelectorAll('.card-section:not(.clone)');
+    
+    // Скрываем контейнер до установки позиции
+    scrollContainer.style.visibility = 'hidden';
+    
+    let sectionWidth = 0;
+    let isAdjusting = false;
+    
+    // Устанавливаем начальную позицию
+    setTimeout(() => {
+        sectionWidth = sections[0].offsetWidth;
+        
+        // Проверяем сохранённую позицию
+        const savedSection = cardScrollPositions[post.id];
+        let targetSection = (savedSection !== undefined) ? savedSection : 0;
+        
+        // Проверяем что сохранённая позиция валидна для текущего количества секций
+        if (targetSection >= totalSections) {
+            targetSection = 0;
+        }
+        
+        // +1 из-за клона в начале
+        scrollContainer.scrollLeft = sectionWidth * (targetSection + 1);
+        
+        // Обновляем индикаторы
         indicators.forEach((ind, index) => {
-            ind.classList.toggle('active', index === currentSlide);
+            ind.classList.toggle('active', index === targetSection);
+        });
+        
+        scrollContainer.style.visibility = 'visible';
+        setTimeout(() => {
+            scrollContainer.style.scrollBehavior = 'smooth';
+        }, 50);
+    }, 0);
+    
+    // Обработчик скролла
+    scrollContainer.addEventListener('scroll', () => {
+        if (isAdjusting) return;
+        
+        const scrollLeft = scrollContainer.scrollLeft;
+        
+        // Вычисляем текущую секцию (с учётом клона в начале)
+        const currentIndex = Math.round(scrollLeft / sectionWidth) - 1;
+        const realIndex = ((currentIndex % totalSections) + totalSections) % totalSections;
+        
+        // Сохраняем позицию
+        cardScrollPositions[post.id] = realIndex;
+        
+        // Обновляем индикаторы
+        indicators.forEach((ind, index) => {
+            ind.classList.toggle('active', index === realIndex);
         });
     });
     
-    // Клик по индикатору для перехода к слайду
+    // Обработчик окончания скролла для перепрыгивания
+    scrollContainer.addEventListener('scrollend', () => {
+        if (isAdjusting) return;
+        
+        const scrollLeft = scrollContainer.scrollLeft;
+        sectionWidth = sections[0].offsetWidth;
+        
+        // Если долистали до клона в конце - прыгаем к реальной первой секции
+        if (scrollLeft >= sectionWidth * (totalSections + 1) - 10) {
+            isAdjusting = true;
+            scrollContainer.style.scrollBehavior = 'auto';
+            scrollContainer.scrollLeft = sectionWidth;
+            scrollContainer.style.scrollBehavior = 'smooth';
+            setTimeout(() => { isAdjusting = false; }, 50);
+        }
+        // Если долистали до клона в начале - прыгаем к реальной последней секции
+        else if (scrollLeft <= 10) {
+            isAdjusting = true;
+            scrollContainer.style.scrollBehavior = 'auto';
+            scrollContainer.scrollLeft = sectionWidth * totalSections;
+            scrollContainer.style.scrollBehavior = 'smooth';
+            setTimeout(() => { isAdjusting = false; }, 50);
+        }
+    });
+    
+    // Fallback для браузеров без scrollend
+    let scrollTimeout;
+    scrollContainer.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            scrollContainer.dispatchEvent(new Event('scrollend'));
+        }, 150);
+    });
+    
+    // Клик по индикатору
     indicators.forEach((ind, index) => {
         ind.addEventListener('click', () => {
-            const slideWidth = swiper.offsetWidth;
-            swiper.scrollTo({
-                left: slideWidth * index,
+            sectionWidth = sections[0].offsetWidth;
+            scrollContainer.scrollTo({
+                left: sectionWidth * (index + 1),
                 behavior: 'smooth'
             });
         });

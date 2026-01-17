@@ -186,11 +186,11 @@
                 <div class="form-group">
                     <label class="form-label">Фотография (необязательно)</label>
                     <div class="photo-upload-container">
-                        <input type="file" id="postPhotoInput" accept="image/*" style="display: none;" onchange="handlePostPhotoSelect(event)">
+                        <input type="file" id="postPhotoInput" accept="image/*" multiple style="display: none;" ...
                         <div class="photo-upload-preview" id="postPhotoPreview" onclick="document.getElementById('postPhotoInput').click()">
                             <div class="photo-upload-placeholder">
                                 <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
-                                <div style="font-size: 14px; color: #999;">Нажмите для добавления фото</div>
+                                <div style="font-size: 14px; color: #999;">Нажмите для добавления фото (до 3х)</div>
                             </div>
                         </div>
                         <button class="photo-remove-btn" id="postPhotoRemoveBtn" onclick="removePostPhoto()" style="display: none;">✕ Удалить фото</button>
@@ -459,22 +459,22 @@
         <div class="menu-popup-cancel" onclick="closeChatMenu()">Отмена</div>
     </div>
 
-    <!-- Post Detail Modal -->
-    <div class="modal-overlay" id="postDetailModal" onclick="closePostDetail()">
-        <div class="post-detail-modal" onclick="event.stopPropagation()">
-            <div class="post-detail-user">
-                <div class="post-detail-avatar" id="postDetailAvatar">👤</div>
-                <div class="post-detail-user-info">
-                    <div class="post-detail-name" id="postDetailName">Имя</div>
-                    <div class="post-detail-age" id="postDetailAge">0 лет</div>
-                </div>
-                <div class="post-detail-close" onclick="closePostDetail()">✕</div>
+<!-- Post Detail Modal -->
+<div class="modal-overlay" id="postDetailModal" onclick="closePostDetail()">
+    <div class="post-detail-modal" onclick="event.stopPropagation()">
+        <div class="post-detail-user">
+            <div class="post-detail-avatar" id="postDetailAvatar">👤</div>
+            <div class="post-detail-user-info">
+                <div class="post-detail-name" id="postDetailName">Имя</div>
+                <div class="post-detail-age" id="postDetailAge">0 лет</div>
             </div>
-            <div class="post-detail-photo" id="postDetailPhoto"></div>
-            <div class="post-detail-text" id="postDetailText">Текст объявления</div>
-            <div class="post-detail-time" id="postDetailTime">Время</div>
+            <div class="post-detail-close" onclick="closePostDetail()">✕</div>
         </div>
+        <div class="post-detail-photo" id="postDetailPhoto"></div>
+        <div class="post-detail-text" id="postDetailText">Текст объявления</div>
+        <div class="post-detail-time" id="postDetailTime">Время</div>
     </div>
+</div>
 
     <!-- Edit Bio Modal -->
     <div class="modal-overlay" id="editBioModal">
@@ -572,8 +572,8 @@
             </div>
         </div>
     </div>
-
-    <!-- JavaScript Modules -->
+    
+<!-- JavaScript Modules -->
     <script src="js/config.js?v=1"></script>
     <script src="js/modals.js?v=1"></script>
     <script src="js/geolocation.js?v=1"></script>
@@ -581,6 +581,7 @@
     <script src="js/profile.js?v=1"></script>
     <script src="js/settings.js?v=1"></script>
     <script src="js/posts.js?v=1"></script>
+    <script src="js/card-swiper.js?v=1"></script>
     <script src="js/chats.js?v=1"></script>
     <script src="js/ui.js?v=1"></script>
     <script src="js/create-post.js?v=1"></script>

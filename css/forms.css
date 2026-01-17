@@ -134,7 +134,7 @@ textarea.form-input {
     color: #ff4444;
 }
 
-/* Photo Upload */
+/* Photo Upload - для нескольких фото */
 .photo-upload-container {
     display: flex;
     flex-direction: column;
@@ -143,7 +143,7 @@ textarea.form-input {
 
 .photo-upload-preview {
     width: 100%;
-    height: 200px;
+    min-height: 120px;
     background: #1a1a1a;
     border: 2px dashed #3a3a3a;
     border-radius: 12px;
@@ -160,15 +160,76 @@ textarea.form-input {
     background: #1f1f1f;
 }
 
-.photo-upload-preview img {
+/* Grid для превью нескольких фото */
+.photo-preview-grid {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.photo-preview-item {
+    position: relative;
+    flex: 1;
+    min-width: 80px;
+    max-width: 150px;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.photo-preview-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
+.photo-preview-remove {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-preview-add {
+    flex: 1;
+    min-width: 80px;
+    max-width: 150px;
+    aspect-ratio: 1;
+    border: 2px dashed #3a3a3a;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.photo-preview-add:hover {
+    border-color: #4a4a4a;
+    background: #1f1f1f;
+}
+
+.photo-preview-add span {
+    font-size: 32px;
+    color: #666;
+}
+
 .photo-upload-placeholder {
     text-align: center;
     color: #666;
+    padding: 40px 20px;
 }
 
 .photo-remove-btn {

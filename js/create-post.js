@@ -2,6 +2,9 @@
 // СОЗДАНИЕ ПОСТА
 // ============================================
 
+// Массив для хранения фото поста (до 3х)
+let postPhotos = [];
+
 // Duration validation
 function validateDuration() {
     const hoursInput = document.getElementById('hoursInput');
@@ -42,196 +45,141 @@ function validateDuration() {
     minutesInput.value = minutes;
 }
 
-// Обработка выбора фото для поста
+// Обработка выбора фото для поста - до 3х фотографий
 function handlePostPhotoSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
     
-    if (!file.type.startsWith('image/')) {
-        showError('Пожалуйста, выберите изображение');
+    // Проверяем сколько фото уже есть
+    const remainingSlots = 3 - postPhotos.length;
+    if (remainingSlots <= 0) {
+        showError('Максимум 3 фотографии');
         return;
     }
     
-    if (file.size > 5 * 1024 * 1024) {
-        showError('Размер изображения не должен превышать 5MB');
-        return;
-    }
+    // Берём только нужное количество файлов
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
     
-    postPhotoFile = file;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        openImageCropEditor(e.target.result);
-    };
-    reader.readAsDataURL(file);
-}
-
-// Открытие редактора обрезки
-function openImageCropEditor(imageDataUrl) {
-    const modal = document.getElementById('imageCropModal');
-    const canvas = document.getElementById('cropCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    const img = new Image();
-    img.onload = () => {
-        const cardAspectRatio = 2;
-        
-        let cropWidth, cropHeight;
-        
-        const imgAspectRatio = img.width / img.height;
-        
-        if (imgAspectRatio > cardAspectRatio) {
-            cropHeight = img.height;
-            cropWidth = cropHeight * cardAspectRatio;
-        } else {
-            cropWidth = img.width;
-            cropHeight = cropWidth / cardAspectRatio;
+    filesToProcess.forEach(file => {
+        if (!file.type.startsWith('image/')) {
+            showError('Пожалуйста, выберите изображение');
+            return;
         }
         
-        const previewWidth = 400;
-        const previewHeight = 200;
-        canvas.width = previewWidth;
-        canvas.height = previewHeight;
+        if (file.size > 5 * 1024 * 1024) {
+            showError('Размер изображения не должен превышать 5MB');
+            return;
+        }
         
-        cropperState = {
-            image: img,
-            scale: 1,
-            offsetX: (img.width - cropWidth) / 2,
-            offsetY: (img.height - cropHeight) / 2,
-            cropWidth: cropWidth,
-            cropHeight: cropHeight
+        // Читаем файл
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const imageDataUrl = e.target.result;
+            
+            // Сжимаем изображение сохраняя пропорции
+            compressImage(imageDataUrl, (compressedDataUrl) => {
+                postPhotos.push(compressedDataUrl);
+                updatePhotoPreview();
+            });
         };
+        reader.readAsDataURL(file);
+    });
+    
+    // Сбрасываем input для повторного выбора
+    event.target.value = '';
+}
+
+// Сжатие изображения с сохранением пропорций
+function compressImage(dataUrl, callback) {
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
         
-        drawCropPreview();
+        // Максимальные размеры
+        const maxWidth = 1200;
+        const maxHeight = 1200;
         
-        setupCropControls();
+        let width = img.width;
+        let height = img.height;
         
-        modal.classList.add('active');
+        // Масштабируем если нужно, сохраняя пропорции
+        if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Рисуем изображение
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Конвертируем в JPEG с качеством 0.85
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        callback(compressedDataUrl);
     };
-    img.src = imageDataUrl;
+    img.src = dataUrl;
 }
 
-// Отрисовка превью обрезки
-function drawCropPreview() {
-    if (!cropperState) return;
+// Обновление превью фотографий
+function updatePhotoPreview() {
+    const preview = document.getElementById('postPhotoPreview');
+    const removeBtn = document.getElementById('postPhotoRemoveBtn');
     
-    const canvas = document.getElementById('cropCanvas');
-    const ctx = canvas.getContext('2d');
-    const { image, scale, offsetX, offsetY, cropWidth, cropHeight } = cropperState;
+    if (postPhotos.length === 0) {
+        preview.innerHTML = `
+            <div class="photo-upload-placeholder">
+                <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
+                <div style="font-size: 14px; color: #999;">Нажмите для добавления фото (до 3х)</div>
+            </div>
+        `;
+        removeBtn.style.display = 'none';
+    } else {
+        let html = '<div class="photo-preview-grid">';
+        
+        postPhotos.forEach((photo, index) => {
+            html += `
+                <div class="photo-preview-item">
+                    <img src="${photo}" alt="Фото ${index + 1}">
+                    <button class="photo-preview-remove" onclick="removePhoto(${index})">✕</button>
+                </div>
+            `;
+        });
+        
+        // Показываем кнопку добавления если меньше 3х фото
+        if (postPhotos.length < 3) {
+            html += `
+                <div class="photo-preview-add" onclick="document.getElementById('postPhotoInput').click()">
+                    <span>+</span>
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+        preview.innerHTML = html;
+        removeBtn.style.display = 'block';
+        removeBtn.textContent = '✕ Удалить все фото';
+    }
     
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.drawImage(
-        image,
-        offsetX, offsetY, cropWidth, cropHeight,
-        0, 0, canvas.width, canvas.height
-    );
-    
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+    // Обновляем глобальную переменную для совместимости
+    postPhotoDataUrl = postPhotos.length > 0 ? postPhotos[0] : null;
 }
 
-// Настройка управления обрезкой
-function setupCropControls() {
-    const canvas = document.getElementById('cropCanvas');
-    let isDragging = false;
-    let startX, startY;
-    
-    canvas.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.offsetX;
-        startY = e.offsetY;
-    });
-    
-    canvas.addEventListener('mousemove', (e) => {
-        if (!isDragging || !cropperState) return;
-        
-        const dx = e.offsetX - startX;
-        const dy = e.offsetY - startY;
-        
-        cropperState.offsetX -= dx / cropperState.scale;
-        cropperState.offsetY -= dy / cropperState.scale;
-        
-        const img = cropperState.image;
-        const maxOffsetX = img.width - cropperState.cropWidth;
-        const maxOffsetY = img.height - cropperState.cropHeight;
-        
-        cropperState.offsetX = Math.max(0, Math.min(maxOffsetX, cropperState.offsetX));
-        cropperState.offsetY = Math.max(0, Math.min(maxOffsetY, cropperState.offsetY));
-        
-        drawCropPreview();
-        
-        startX = e.offsetX;
-        startY = e.offsetY;
-    });
-    
-    canvas.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-    
-    canvas.addEventListener('mouseleave', () => {
-        isDragging = false;
-    });
-    
-    // Touch events для мобильных
-    canvas.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        startX = touch.clientX - rect.left;
-        startY = touch.clientY - rect.top;
-        e.preventDefault();
-    });
-    
-    canvas.addEventListener('touchmove', (e) => {
-        if (!isDragging || !cropperState) return;
-        
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-        
-        const dx = x - startX;
-        const dy = y - startY;
-        
-        cropperState.offsetX -= dx / cropperState.scale;
-        cropperState.offsetY -= dy / cropperState.scale;
-        
-        const img = cropperState.image;
-        const maxOffsetX = img.width - cropperState.cropWidth;
-        const maxOffsetY = img.height - cropperState.cropHeight;
-        
-        cropperState.offsetX = Math.max(0, Math.min(maxOffsetX, cropperState.offsetX));
-        cropperState.offsetY = Math.max(0, Math.min(maxOffsetY, cropperState.offsetY));
-        
-        drawCropPreview();
-        
-        startX = x;
-        startY = y;
-        e.preventDefault();
-    });
-    
-    canvas.addEventListener('touchend', () => {
-        isDragging = false;
-    });
+// Удаление одного фото по индексу
+function removePhoto(index) {
+    postPhotos.splice(index, 1);
+    updatePhotoPreview();
 }
 
-// Удаление фото поста
+// Удаление всех фото
 function removePostPhoto() {
+    postPhotos = [];
     postPhotoFile = null;
     postPhotoDataUrl = null;
-    
-    const preview = document.getElementById('postPhotoPreview');
-    preview.innerHTML = `
-        <div class="photo-upload-placeholder">
-            <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
-            <div style="font-size: 14px; color: #999;">Нажмите для добавления фото</div>
-        </div>
-    `;
-    
+    updatePhotoPreview();
     document.getElementById('postPhotoInput').value = '';
-    document.getElementById('postPhotoRemoveBtn').style.display = 'none';
 }
 
 // Form validation
@@ -272,7 +220,9 @@ async function createRequest() {
     postButton.textContent = 'Создание...';
     postButton.style.opacity = '0.5';
     
-    const success = await createPostOnServer(text, selectedDuration, postPhotoDataUrl);
+    // Передаём все фото (или первое для совместимости)
+    const photoToSend = postPhotos.length > 0 ? postPhotos.join('|||') : null;
+    const success = await createPostOnServer(text, selectedDuration, photoToSend);
     
     if (success) {
         document.getElementById('requestText').value = '';

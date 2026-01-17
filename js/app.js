@@ -30,41 +30,48 @@ function startTimer() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Применение обрезки
-    document.getElementById('applyCropBtn').addEventListener('click', () => {
-        if (!cropperState) return;
-        
-        const finalCanvas = document.createElement('canvas');
-        const finalCtx = finalCanvas.getContext('2d');
-        
-        const outputWidth = 800;
-        const outputHeight = 400;
-        finalCanvas.width = outputWidth;
-        finalCanvas.height = outputHeight;
-        
-        const { image, offsetX, offsetY, cropWidth, cropHeight } = cropperState;
-        finalCtx.drawImage(
-            image,
-            offsetX, offsetY, cropWidth, cropHeight,
-            0, 0, outputWidth, outputHeight
-        );
-        
-        postPhotoDataUrl = finalCanvas.toDataURL('image/jpeg', 0.9);
-        
-        const preview = document.getElementById('postPhotoPreview');
-        preview.innerHTML = `<img src="${postPhotoDataUrl}" alt="Фото">`;
-        
-        document.getElementById('postPhotoRemoveBtn').style.display = 'block';
-        
-        document.getElementById('imageCropModal').classList.remove('active');
-        cropperState = null;
-    });
+    // Проверяем наличие cropper элементов (могут быть удалены)
+    const applyCropBtn = document.getElementById('applyCropBtn');
+    const cancelCropBtn = document.getElementById('cancelCropBtn');
     
-    document.getElementById('cancelCropBtn').addEventListener('click', () => {
-        document.getElementById('imageCropModal').classList.remove('active');
-        document.getElementById('postPhotoInput').value = '';
-        cropperState = null;
-    });
+    if (applyCropBtn) {
+        applyCropBtn.addEventListener('click', () => {
+            if (!cropperState) return;
+            
+            const finalCanvas = document.createElement('canvas');
+            const finalCtx = finalCanvas.getContext('2d');
+            
+            const outputWidth = 800;
+            const outputHeight = 400;
+            finalCanvas.width = outputWidth;
+            finalCanvas.height = outputHeight;
+            
+            const { image, offsetX, offsetY, cropWidth, cropHeight } = cropperState;
+            finalCtx.drawImage(
+                image,
+                offsetX, offsetY, cropWidth, cropHeight,
+                0, 0, outputWidth, outputHeight
+            );
+            
+            postPhotoDataUrl = finalCanvas.toDataURL('image/jpeg', 0.9);
+            
+            const preview = document.getElementById('postPhotoPreview');
+            preview.innerHTML = `<img src="${postPhotoDataUrl}" alt="Фото">`;
+            
+            document.getElementById('postPhotoRemoveBtn').style.display = 'block';
+            
+            document.getElementById('imageCropModal').classList.remove('active');
+            cropperState = null;
+        });
+    }
+    
+    if (cancelCropBtn) {
+        cancelCropBtn.addEventListener('click', () => {
+            document.getElementById('imageCropModal').classList.remove('active');
+            document.getElementById('postPhotoInput').value = '';
+            cropperState = null;
+        });
+    }
     
     // Enter для отправки сообщения в чате
     const chatInput = document.getElementById('chatInput');
@@ -110,11 +117,6 @@ setTimeout(() => {
 // ============================================
 // ПЕРИОДИЧЕСКИЕ ЗАДАЧИ
 // ============================================
-
-// Автоматическое обновление постов каждые 30 секунд
-setInterval(() => {
-    loadPostsFromServer();
-}, 30000);
 
 // Обновляем активность каждые 2 минуты
 setInterval(() => {

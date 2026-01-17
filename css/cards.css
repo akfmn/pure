@@ -39,7 +39,7 @@
 }
 
 /* ============================================
-   PURE-STYLE SWIPEABLE CARD
+   WIDE HORIZONTAL CARD - Широкая карточка
    ============================================ */
 
 .request-card {
@@ -50,34 +50,114 @@
     border: 1px solid #252525;
 }
 
-.card-swiper {
-    display: flex;
+/* Контейнер для горизонтального скролла */
+.card-scroll-container {
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* Автоматическое притягивание к секциям при отпускании */
+    scroll-snap-type: x mandatory;
+    /* scroll-behavior добавляется через JS после инициализации */
 }
 
-.card-swiper::-webkit-scrollbar {
+.card-scroll-container::-webkit-scrollbar {
     display: none;
 }
 
-.card-slide {
-    flex: 0 0 100%;
-    scroll-snap-align: start;
-    min-width: 100%;
+/* Широкая внутренняя карточка */
+.card-wide-content {
+    display: flex;
+    flex-direction: row;
+    /* Ширина автоматическая - зависит от количества секций */
+    width: max-content;
+    min-height: 250px;
+    align-items: stretch;
 }
 
-/* Slide 1: User Info */
-.card-user-slide {
+/* Каждая секция карточки */
+.card-section {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
     padding: 25px;
+    box-sizing: border-box;
+}
+
+/* Секция профиля */
+.card-section-profile {
+    width: calc(100vw - 40px);
+    max-width: 390px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 280px;
     cursor: pointer;
+    border-right: 1px solid #252525;
 }
+
+/* Секция объявления */
+.card-section-post {
+    width: calc(100vw - 40px);
+    max-width: 390px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #252525;
+    justify-content: center;
+}
+
+/* Секция фото */
+.card-section-photos {
+    width: calc(100vw - 40px);
+    max-width: 390px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    min-height: 200px;
+}
+
+/* Секция с одним фото (отдельный слайд) */
+.card-section-photo {
+    width: calc(100vw - 40px);
+    max-width: 390px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    min-height: 200px;
+}
+
+.card-single-photo {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-single-photo img {
+    max-width: 100%;
+    max-height: 280px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+/* Клоны для кругового скролла */
+.card-section.clone {
+    /* Клоны выглядят так же как оригиналы */
+}
+
+.card-section.clone.clone-last {
+    padding: 15px;
+}
+
+/* ============================================
+   PROFILE SECTION STYLES
+   ============================================ */
 
 .card-avatar {
     width: 80px;
@@ -153,13 +233,9 @@
     margin-top: 12px;
 }
 
-/* Slide 2: Post Content */
-.card-content-slide {
-    padding: 25px;
-    display: flex;
-    flex-direction: column;
-    min-height: 280px;
-}
+/* ============================================
+   POST SECTION STYLES
+   ============================================ */
 
 .card-timer-row {
     display: flex;
@@ -229,50 +305,84 @@
     background: #3a3a3a;
 }
 
-/* Slide 3: Photos */
-.card-photos-slide {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 280px;
-}
+/* ============================================
+   PHOTOS SECTION STYLES
+   ============================================ */
 
 .card-photos-grid {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    flex: 1;
+    width: 100%;
+    align-items: center;
 }
 
-.card-photos-grid.photos-1 {
-    grid-template-columns: 1fr;
-}
-
-.card-photos-grid.photos-2 {
-    grid-template-columns: 1fr 1fr;
-}
-
+.card-photos-grid.photos-2,
 .card-photos-grid.photos-3 {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.card-photo {
+    overflow: hidden;
+    background: transparent;
+    position: relative;
+    border-radius: 12px;
+    max-width: 100%;
+}
+
+/* Одно фото - на всю ширину, сохраняя пропорции */
+.card-photos-grid.photos-1 .card-photo {
+    width: 100%;
+}
+
+.card-photos-grid.photos-1 .card-photo img {
+    width: 100%;
+    height: auto;
+    max-height: 350px;
+    object-fit: contain;
+    display: block;
+}
+
+/* Два фото - в ряд */
+.card-photos-grid.photos-2 .card-photo {
+    width: calc(50% - 4px);
+}
+
+.card-photos-grid.photos-2 .card-photo img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+/* Три фото - одно большое слева, два справа */
+.card-photos-grid.photos-3 {
+    display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 8px;
 }
 
 .card-photos-grid.photos-3 .card-photo:first-child {
     grid-row: span 2;
 }
 
-.card-photo {
-    border-radius: 12px;
-    overflow: hidden;
-    background: #2a2a2a;
-    position: relative;
-    min-height: 120px;
-}
-
-.card-photo img {
+.card-photos-grid.photos-3 .card-photo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+}
+
+/* Общие стили для изображений */
+.card-photo img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
 }
 
 .card-no-photos {
@@ -280,8 +390,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    width: 100%;
+    min-height: 200px;
     color: #555;
+    background: transparent;
+    border-radius: 12px;
 }
 
 .card-no-photos-icon {
@@ -294,8 +407,11 @@
     font-size: 14px;
 }
 
-/* Slide Indicators */
-.card-indicators {
+/* ============================================
+   SCROLL INDICATORS
+   ============================================ */
+
+.card-scroll-indicators {
     display: flex;
     justify-content: center;
     gap: 6px;
@@ -303,21 +419,29 @@
     background: #151515;
 }
 
-.card-indicator {
+.card-scroll-indicator {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: #333;
     transition: all 0.3s;
+    cursor: pointer;
 }
 
-.card-indicator.active {
+.card-scroll-indicator:hover {
+    background: #555;
+}
+
+.card-scroll-indicator.active {
     background: #4ade80;
     width: 20px;
     border-radius: 4px;
 }
 
-/* Pull-to-Refresh */
+/* ============================================
+   PULL-TO-REFRESH & OTHER
+   ============================================ */
+
 .pull-to-refresh-indicator {
     position: absolute;
     top: 60px;
