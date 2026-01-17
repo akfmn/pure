@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet&Go Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #2a2a2a;
+            margin-bottom: 30px;
+        }
+        
+        .admin-title {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #888;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: #1a1a1a;
+            border: none;
+            border-radius: 12px;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #0a0a0a;
+        }
+        
+        .tab:hover {
+            background: #2a2a2a;
+        }
+        
+        .tab.active:hover {
+            background: white;
+        }
+        
+        .reports-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .report-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 20px;
+        }
+        
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .report-type {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .report-type.user {
+            background: #ff9800;
+            color: #000;
+        }
+        
+        .report-type.post {
+            background: #2196f3;
+            color: #fff;
+        }
+        
+        .report-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .report-status.pending {
+            background: #ff4444;
+            color: #fff;
+        }
+        
+        .report-status.resolved {
+            background: #4CAF50;
+            color: #fff;
+        }
+        
+        .report-status.dismissed {
+            background: #666;
+            color: #fff;
+        }
+        
+        .report-info {
+            margin-bottom: 15px;
+        }
+        
+        .report-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .report-label {
+            color: #888;
+            min-width: 120px;
+        }
+        
+        .report-value {
+            color: #fff;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #0a0a0a;
+        }
+        
+        .btn-danger {
+            background: #ff4444;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #2a2a2a;
+            color: #888;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: scale(0.98);
+        }
+        
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .users-table th,
+        .users-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        
+        .users-table th {
+            color: #888;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .user-role {
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        
+        .user-role.admin {
+            background: #9c27b0;
+            color: white;
+        }
+        
+        .user-role.user {
+            background: #2a2a2a;
+            color: #888;
+        }
+        
+        .user-role.banned {
+            background: #ff4444;
+            color: white;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            text-align: center;
+        }
+        
+        .login-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            background: #0a0a0a;
+            border: 2px solid #2a2a2a;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: white;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: white;
+            color: #0a0a0a;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .error-msg {
+            color: #ff4444;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .chat-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .chat-modal {
+            background: #1a1a1a;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #2a2a2a;
+            font-weight: 600;
+        }
+        
+        .chat-modal-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-height: 60vh;
+        }
+        
+        .chat-msg {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .chat-msg-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .chat-msg-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #3a3a3a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .chat-msg-name {
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .chat-msg-time {
+            color: #666;
+            font-size: 12px;
+            margin-left: auto;
+        }
+        
+        .chat-msg-text {
+            color: #ccc;
+            line-height: 1.5;
+        }
+        
+        .report-type.chat {
+            background: #4CAF50;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginScreen" class="login-container">
+        <div class="login-title">🔐 Admin Panel</div>
+        <div id="loginError" class="error-msg" style="display: none;"></div>
+        <input type="text" class="login-input" id="loginUsername" placeholder="Логин">
+        <input type="password" class="login-input" id="loginPassword" placeholder="Пароль">
+        <button class="login-btn" onclick="login()">Войти</button>
+    </div>
+    
+    <div id="adminPanel" class="admin-container" style="display: none;">
+        <div class="admin-header">
+            <div class="admin-title">🛡 Meet&Go Admin</div>
+            <div class="admin-user">
+                <span id="adminName">Admin</span>
+                <button class="btn btn-secondary" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="statUsers">-</div>
+                <div class="stat-label">Пользователей</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statPosts">-</div>
+                <div class="stat-label">Активных объявлений</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statReports">-</div>
+                <div class="stat-label">Новых жалоб</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statChats">-</div>
+                <div class="stat-label">Чатов</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('reports')">Жалобы</button>
+            <button class="tab" onclick="showTab('users')">Пользователи</button>
+        </div>
+        
+        <div id="reportsTab">
+            <div class="tabs" style="margin-bottom: 20px;">
+                <button class="tab active" onclick="filterReports('all')">Все</button>
+                <button class="tab" onclick="filterReports('pending')">Ожидают</button>
+                <button class="tab" onclick="filterReports('resolved')">Решены</button>
+            </div>
+            <div class="reports-list" id="reportsList"></div>
+        </div>
+        
+        <div id="usersTab" style="display: none;">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Пользователь</th>
+                        <th>Email</th>
+                        <th>Город</th>
+                        <th>Роль</th>
+                        <th>Постов</th>
+                        <th>Жалоб</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="usersList"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'https://kofpack.com/api';
+        let adminUserId = null;
+        let currentReportFilter = 'all';
+        
+        // Проверяем сохраненную сессию
+        window.onload = function() {
+            const saved = localStorage.getItem('meetgo_admin');
+            if (saved) {
+                const data = JSON.parse(saved);
+                adminUserId = data.id;
+                document.getElementById('adminName').textContent = data.name;
+                showAdminPanel();
+            }
+        };
+        
+        async function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${API_URL}/auth.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.user.role === 'admin') {
+                    adminUserId = data.user.id;
+                    localStorage.setItem('meetgo_admin', JSON.stringify(data.user));
+                    document.getElementById('adminName').textContent = data.user.name;
+                    showAdminPanel();
+                } else if (data.success) {
+                    showError('У вас нет прав администратора');
+                } else {
+                    showError(data.error || 'Ошибка входа');
+                }
+            } catch (error) {
+                showError('Ошибка подключения');
+            }
+        }
+        
+        function showError(msg) {
+            const el = document.getElementById('loginError');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+        
+        function logout() {
+            localStorage.removeItem('meetgo_admin');
+            adminUserId = null;
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+        
+        function showAdminPanel() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            loadStats();
+            loadReports();
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/admin.php?action=stats&user_id=${adminUserId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('statUsers').textContent = data.stats.total_users;
+                    document.getElementById('statPosts').textContent = data.stats.active_posts;
+                    document.getElementById('statReports').textContent = data.stats.pending_reports;
+                    document.getElementById('statChats').textContent = data.stats.total_chats;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        async function loadReports(status = 'all') {
+            currentReportFilter = status;
+            try {
+                const response = await fetch(`${API_URL}/admin.php?action=reports&user_id=${adminUserId}&status=${status}`);
+                const data = await response.json();
+                
+                const container = document.getElementById('reportsList');
+                
+                if (data.success && data.reports.length > 0) {
+                    container.innerHTML = data.reports.map(r => `
+                        <div class="report-card">
+                            <div class="report-header">
+                                <span class="report-type ${r.type}">${r.type === 'user' ? '👤 Пользователь' : '📝 Объявление'}</span>
+                                ${r.chat_id ? '<span class="report-type chat">💬 Из чата</span>' : ''}
+                                <span class="report-status ${r.status}">${r.status === 'pending' ? 'Ожидает' : r.status === 'resolved' ? 'Решено' : 'Отклонено'}</span>
+                            </div>
+                            <div class="report-info">
+                                <div class="report-row">
+                                    <span class="report-label">От кого:</span>
+                                    <span class="report-value">${r.reporter_avatar || '👤'} ${r.reporter_name}</span>
+                                </div>
+                                ${r.type === 'user' ? `
+                                <div class="report-row">
+                                    <span class="report-label">На кого:</span>
+                                    <span class="report-value">${r.reported_avatar || '👤'} ${r.reported_name}</span>
+                                </div>
+                                ` : `
+                                <div class="report-row">
+                                    <span class="report-label">Пост:</span>
+                                    <span class="report-value">${r.post_text || 'Удален'}</span>
+                                </div>
+                                `}
+                                <div class="report-row">
+                                    <span class="report-label">Причина:</span>
+                                    <span class="report-value">${r.reason}</span>
+                                </div>
+                                <div class="report-row">
+                                    <span class="report-label">Дата:</span>
+                                    <span class="report-value">${new Date(r.created_at).toLocaleString('ru-RU')}</span>
+                                </div>
+                            </div>
+                            ${r.status === 'pending' ? `
+                            <div class="report-actions">
+                                ${r.chat_id ? `
+                                <button class="btn btn-secondary" onclick="viewChat(${r.chat_id})">👁 Просмотр чата</button>
+                                ` : ''}
+                                <button class="btn btn-primary" onclick="processReport(${r.id}, 'resolved')">✓ Решено</button>
+                                <button class="btn btn-secondary" onclick="processReport(${r.id}, 'dismissed')">✗ Отклонить</button>
+                                ${r.type === 'user' && r.reported_user_id ? `
+                                <button class="btn btn-danger" onclick="banUser(${r.reported_user_id})">🚫 Забанить</button>
+                                ` : ''}
+                                ${r.type === 'post' && r.post_id ? `
+                                <button class="btn btn-danger" onclick="deletePost(${r.post_id})">🗑 Удалить пост</button>
+                                ` : ''}
+                            </div>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">✓</div><div>Нет жалоб</div></div>';
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+        
+        function filterReports(status) {
+            document.querySelectorAll('#reportsTab .tabs .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            loadReports(status);
+        }
+        
+        async function processReport(reportId, status) {
+            try {
+                const response = await fetch(`${API_URL}/admin.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: adminUserId,
+                        action: 'process_report',
+                        report_id: reportId,
+                        status: status
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    loadReports(currentReportFilter);
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        async function banUser(targetUserId) {
+            if (!confirm('Забанить пользователя?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/admin.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: adminUserId,
+                        action: 'ban_user',
+                        target_user_id: targetUserId
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Пользователь забанен');
+                    loadReports(currentReportFilter);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        async function deletePost(postId) {
+            if (!confirm('Удалить объявление?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/admin.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: adminUserId,
+                        action: 'delete_post',
+                        post_id: postId
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Объявление удалено');
+                    loadReports(currentReportFilter);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        function showTab(tab) {
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tab === 'reports') {
+                document.getElementById('reportsTab').style.display = 'block';
+                document.getElementById('usersTab').style.display = 'none';
+            } else {
+                document.getElementById('reportsTab').style.display = 'none';
+                document.getElementById('usersTab').style.display = 'block';
+                loadUsers();
+            }
+        }
+        
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_URL}/admin.php?action=users&user_id=${adminUserId}`);
+                const data = await response.json();
+                
+                const container = document.getElementById('usersList');
+                
+                if (data.success) {
+                    container.innerHTML = data.users.map(u => `
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="user-avatar">${u.avatar || '👤'}</div>
+                                    <span>${u.name}</span>
+                                </div>
+                            </td>
+                            <td>${u.email || '-'}</td>
+                            <td>${u.city || '-'}, ${u.country || '-'}</td>
+                            <td><span class="user-role ${u.role}">${u.role}</span></td>
+                            <td>${u.posts_count}</td>
+                            <td>${u.reports_count}</td>
+                            <td>
+                                ${u.role === 'banned' ? 
+                                    `<button class="btn btn-secondary" onclick="unbanUser(${u.id})">Разбанить</button>` :
+                                    u.role !== 'admin' ? 
+                                    `<button class="btn btn-danger" onclick="banUser(${u.id})">Бан</button>` : ''
+                                }
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+        
+        async function unbanUser(targetUserId) {
+            try {
+                const response = await fetch(`${API_URL}/admin.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: adminUserId,
+                        action: 'unban_user',
+                        target_user_id: targetUserId
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    loadUsers();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        async function viewChat(chatId) {
+            try {
+                const response = await fetch(`${API_URL}/admin.php?action=chat_messages&user_id=${adminUserId}&chat_id=${chatId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const chat = data.chat;
+                    const messages = data.messages;
+                    
+                    let html = `
+                        <div class="chat-modal-overlay" onclick="closeChatModal()">
+                            <div class="chat-modal" onclick="event.stopPropagation()">
+                                <div class="chat-modal-header">
+                                    <span>💬 Переписка: ${chat.user1_name} ↔ ${chat.user2_name}</span>
+                                    <button class="btn btn-secondary" onclick="closeChatModal()">✕</button>
+                                </div>
+                                <div class="chat-modal-messages">
+                    `;
+                    
+                    if (messages.length === 0) {
+                        html += '<div class="empty-state">Нет сообщений</div>';
+                    } else {
+                        messages.forEach(msg => {
+                            html += `
+                                <div class="chat-msg">
+                                    <div class="chat-msg-header">
+                                        <span class="chat-msg-avatar">${msg.sender_avatar || '👤'}</span>
+                                        <span class="chat-msg-name">${msg.sender_name}</span>
+                                        <span class="chat-msg-time">${new Date(msg.created_at).toLocaleString('ru-RU')}</span>
+                                    </div>
+                                    <div class="chat-msg-text">${msg.message}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    html += `
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', html);
+                }
+            } catch (error) {
+                console.error('Error viewing chat:', error);
+            }
+        }
+        
+        function closeChatModal() {
+            const modal = document.querySelector('.chat-modal-overlay');
+            if (modal) modal.remove();
+        }
+    </script>
+</body>
+</html>

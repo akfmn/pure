@@ -1,4 +1,4 @@
-   // ============================================
+// ============================================
         // КАСТОМНЫЕ МОДАЛЬНЫЕ ОКНА
         // ============================================
         
@@ -127,6 +127,9 @@
         let currentUserId = null;
         let currentUser = null;
         
+        // Глобальный массив постов
+        let currentPosts = [];
+        
         // Разница между серверным и клиентским временем (в миллисекундах)
         let serverTimeOffset = 0;
         
@@ -163,9 +166,7 @@
                         console.warn('❌ Геолокация недоступна:', error.message);
                         userLocation.enabled = false;
                         
-                        showError('Не удалось получить геолокацию.\n\n' +
-                              'Для показа расстояний разрешите доступ к геолокации в настройках браузера.\n\n' +
-                              'Ошибка: ' + error.message);
+                        showGeolocationError(error.code);
                     },
                     {
                         enableHighAccuracy: true,
@@ -177,6 +178,122 @@
                 console.warn('❌ Геолокация не поддерживается браузером');
                 showError('Геолокация не поддерживается вашим браузером');
             }
+        }
+        
+        // Показать ошибку геолокации с кнопкой настроек
+        function showGeolocationError(errorCode) {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.id = 'geoErrorOverlay';
+            overlay.style.cssText = 'display:flex; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center; padding:20px;';
+            
+            let title = '';
+            let message = '';
+            let showSettingsBtn = false;
+            
+            switch(errorCode) {
+                case 1: // PERMISSION_DENIED
+                    title = '📍 Доступ к геолокации';
+                    message = 'Для показа расстояний и фильтра "Рядом" нужен доступ к вашему местоположению.';
+                    showSettingsBtn = true;
+                    break;
+                case 2: // POSITION_UNAVAILABLE
+                    title = '📍 GPS недоступен';
+                    message = 'Не удалось определить местоположение. Убедитесь что GPS включён на устройстве.';
+                    break;
+                case 3: // TIMEOUT
+                    title = '📍 Время ожидания';
+                    message = 'Не удалось получить местоположение. Попробуйте выйти на открытое место.';
+                    break;
+                default:
+                    title = '📍 Геолокация';
+                    message = 'Не удалось получить местоположение.';
+            }
+            
+            overlay.innerHTML = `
+                <div style="background:#1a1a1a; border-radius:20px; padding:24px; max-width:320px; width:100%; text-align:center;">
+                    <div style="font-size:48px; margin-bottom:16px;">📍</div>
+                    <div style="font-size:18px; font-weight:600; color:#fff; margin-bottom:12px;">${title}</div>
+                    <div style="font-size:14px; color:#aaa; margin-bottom:24px; line-height:1.5;">${message}</div>
+                    
+                    ${showSettingsBtn ? `
+                        <div style="background:#2a2a2a; border-radius:12px; padding:16px; margin-bottom:20px; text-align:left;">
+                            <div style="font-size:13px; color:#888; margin-bottom:8px;">Как включить:</div>
+                            <div style="font-size:13px; color:#ccc; line-height:1.6;">
+                                1. Откройте <b>Настройки</b> телефона<br>
+                                2. Найдите <b>Meet&Go</b> или <b>Chrome</b><br>
+                                3. <b>Разрешения</b> → <b>Местоположение</b><br>
+                                4. Выберите <b>Разрешить</b>
+                            </div>
+                        </div>
+                        <button onclick="tryOpenAppSettings()" style="
+                            width:100%;
+                            padding:14px;
+                            background:#4ade80;
+                            color:#000;
+                            border:none;
+                            border-radius:12px;
+                            font-size:15px;
+                            font-weight:600;
+                            cursor:pointer;
+                            margin-bottom:10px;
+                        ">Открыть настройки</button>
+                    ` : ''}
+                    
+                    <button onclick="closeGeoError()" style="
+                        width:100%;
+                        padding:14px;
+                        background:${showSettingsBtn ? '#333' : '#4ade80'};
+                        color:${showSettingsBtn ? '#fff' : '#000'};
+                        border:none;
+                        border-radius:12px;
+                        font-size:15px;
+                        font-weight:500;
+                        cursor:pointer;
+                    ">${showSettingsBtn ? 'Позже' : 'Понятно'}</button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+        }
+        
+        // Закрыть окно ошибки геолокации
+        function closeGeoError() {
+            const overlay = document.getElementById('geoErrorOverlay');
+            if (overlay) overlay.remove();
+        }
+        
+        // Попытка открыть настройки приложения
+        function tryOpenAppSettings() {
+            // На Android можно попробовать открыть настройки через intent
+            // Но это работает только в некоторых браузерах/PWA
+            
+            // Пробуем разные способы
+            const isAndroid = /android/i.test(navigator.userAgent);
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            
+            if (isAndroid) {
+                // Попытка открыть настройки Android
+                try {
+                    // Некоторые браузеры поддерживают это
+                    window.location.href = 'intent://settings#Intent;scheme=android-app;end';
+                } catch(e) {
+                    // Если не сработало, показываем инструкцию
+                    showError('Откройте настройки телефона вручную:\n\nНастройки → Приложения → Meet&Go → Разрешения → Местоположение');
+                }
+            } else if (isIOS) {
+                // На iOS можно открыть настройки приложения
+                try {
+                    window.location.href = 'app-settings:';
+                } catch(e) {
+                    showError('Откройте настройки iPhone:\n\nНастройки → Конфиденциальность → Службы геолокации → Safari/Meet&Go');
+                }
+            } else {
+                // Для десктопа показываем инструкцию
+                showError('Нажмите на иконку 🔒 слева от адресной строки браузера и разрешите доступ к местоположению.');
+            }
+            
+            closeGeoError();
         }
         
         // Обновление координат пользователя на сервере
@@ -286,6 +403,14 @@
             document.getElementById('editName').value = currentUser.name || '';
             document.getElementById('editBirthdate').value = currentUser.birthdate || '';
             
+            // Заполняем bio
+            const bioTextarea = document.getElementById('editBio');
+            bioTextarea.value = currentUser.bio || '';
+            document.getElementById('editBioCount').textContent = bioTextarea.value.length;
+            bioTextarea.oninput = function() {
+                document.getElementById('editBioCount').textContent = this.value.length;
+            };
+            
             // Устанавливаем максимальную дату (18 лет назад)
             const today = new Date();
             const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
@@ -371,7 +496,7 @@
             }
             
             if (age >= 18) {
-                ageHint.textContent = 'Возраст: ' + age + ' лет ✓';
+                ageHint.textContent = 'Возраст: ' + age + ' лет ✔';
                 ageHint.classList.add('success');
             } else {
                 ageHint.textContent = 'Возраст: ' + age + ' лет (минимум 18)';
@@ -384,6 +509,7 @@
             const name = document.getElementById('editName').value.trim();
             const country = document.getElementById('editCountry').value;
             const city = document.getElementById('editCity').value;
+            const bio = document.getElementById('editBio').value.trim();
             
             // Валидация
             if (!name || name.length < 2) {
@@ -410,7 +536,8 @@
                         name: name,
                         country: country,
                         city: city,
-                        avatar: selectedAvatar
+                        avatar: selectedAvatar,
+                        bio: bio
                     })
                 });
                 
@@ -422,6 +549,7 @@
                     currentUser.country = country;
                     currentUser.city = city;
                     currentUser.avatar = selectedAvatar;
+                    currentUser.bio = bio;
                     
                     localStorage.setItem('meetgo_user', JSON.stringify(currentUser));
                     
@@ -536,7 +664,7 @@
                 ageHint.classList.add('error');
                 return false;
             } else {
-                ageHint.textContent = 'Возраст: ' + age + ' лет ✓';
+                ageHint.textContent = 'Возраст: ' + age + ' лет ✔';
                 ageHint.classList.remove('error');
                 ageHint.style.color = '#4a4';
                 return true;
@@ -586,6 +714,14 @@
                     currentUserId = data.user.id;
                     localStorage.setItem('meetgo_user', JSON.stringify(data.user));
                     
+                    // Сбрасываем фильтр на nearby
+                    currentFilter = 'nearby';
+                    document.querySelectorAll('.filter-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    const nearbyFilter = document.querySelector('.filter-item[onclick*="nearby"]');
+                    if (nearbyFilter) nearbyFilter.classList.add('active');
+                    
                     // Обновляем активность при входе
                     updateUserActivity();
                     
@@ -597,12 +733,112 @@
                     loadPostsFromServer();
                     initPullToRefresh(); // Инициализируем pull-to-refresh
                     initAgeFilter(); // Инициализируем фильтр возраста
+                    startUnreadCheck(); // Проверка непрочитанных сообщений
                 } else {
-                    alert(data.error || 'Ошибка входа');
+                    // Показываем ошибку с кнопкой восстановления пароля
+                    await showLoginError(data.error || 'Неверный логин или пароль');
                 }
             } catch (error) {
                 console.error('Login error:', error);
                 alert('Ошибка подключения к серверу');
+            }
+        }
+        
+        // Показать ошибку входа с кнопкой "Забыли пароль?"
+        function showLoginError(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('customModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalMessage = document.getElementById('modalMessage');
+                const modalIcon = document.getElementById('modalIcon');
+                const confirmBtn = document.getElementById('modalConfirm');
+                const cancelBtn = document.getElementById('modalCancel');
+                
+                modalTitle.textContent = 'Ошибка входа';
+                modalMessage.textContent = message;
+                modalIcon.textContent = '❌';
+                
+                // Показываем кнопку "Забыли пароль?" вместо "Отмена"
+                confirmBtn.textContent = 'OK';
+                cancelBtn.textContent = 'Забыли пароль?';
+                cancelBtn.style.display = 'block';
+                
+                modal.classList.add('active');
+                
+                const handleConfirm = () => {
+                    modal.classList.remove('active');
+                    confirmBtn.removeEventListener('click', handleConfirm);
+                    cancelBtn.removeEventListener('click', handleForgot);
+                    // Восстанавливаем текст кнопок
+                    confirmBtn.textContent = 'OK';
+                    cancelBtn.textContent = 'Отмена';
+                    resolve(true);
+                };
+                
+                const handleForgot = () => {
+                    modal.classList.remove('active');
+                    confirmBtn.removeEventListener('click', handleConfirm);
+                    cancelBtn.removeEventListener('click', handleForgot);
+                    // Восстанавливаем текст кнопок
+                    confirmBtn.textContent = 'OK';
+                    cancelBtn.textContent = 'Отмена';
+                    // Открываем окно восстановления пароля
+                    showRecoveryModal();
+                    resolve(false);
+                };
+                
+                confirmBtn.addEventListener('click', handleConfirm);
+                cancelBtn.addEventListener('click', handleForgot);
+            });
+        }
+        
+        // ============================================
+        // ВОССТАНОВЛЕНИЕ ПАРОЛЯ
+        // ============================================
+        
+        function showRecoveryModal() {
+            document.getElementById('recoveryEmail').value = '';
+            document.getElementById('recoveryModal').classList.add('active');
+        }
+        
+        function closeRecoveryModal() {
+            document.getElementById('recoveryModal').classList.remove('active');
+        }
+        
+        async function sendRecoveryEmail() {
+            const emailInput = document.getElementById('recoveryEmail');
+            if (!emailInput) {
+                return;
+            }
+            
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                await showError('Введите email');
+                return;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                await showError('Введите корректный email');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/recovery.php?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+                
+                closeRecoveryModal();
+                
+                if (data.success) {
+                    await showSuccess('Данные для входа отправлены на указанный email');
+                } else {
+                    await showError(data.error || 'Ошибка восстановления');
+                }
+            } catch (error) {
+                console.error('Recovery error:', error);
+                closeRecoveryModal();
+                await showError('Ошибка подключения к серверу');
             }
         }
         
@@ -761,9 +997,45 @@
         
         // Выход
         function handleLogout() {
+            // Останавливаем все polling интервалы
+            stopChatPolling();
+            stopChatsListPolling();
+            stopUnreadCheck();
+            
+            // Очищаем localStorage
             localStorage.removeItem('meetgo_user');
+            
+            // Сбрасываем все переменные состояния
             currentUser = null;
             currentUserId = null;
+            currentChatId = null;
+            currentChatUserId = null;
+            currentChatBlocked = false;
+            currentChatBlockedByMe = false;
+            
+            // Сбрасываем фильтр на значение по умолчанию
+            currentFilter = 'nearby';
+            
+            // Сбрасываем геолокацию
+            userLocation.latitude = null;
+            userLocation.longitude = null;
+            userLocation.enabled = false;
+            
+            // Сбрасываем фильтр возраста
+            ageFilter.enabled = false;
+            ageFilter.min = 18;
+            ageFilter.max = 100;
+            
+            // Сбрасываем UI фильтров
+            document.querySelectorAll('.filter-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const nearbyFilter = document.querySelector('.filter-item[onclick*="nearby"]');
+            if (nearbyFilter) nearbyFilter.classList.add('active');
+            
+            // Очищаем индикатор непрочитанных
+            updateUnreadIndicator(0);
+            
             showScreen('loginScreen');
         }
         
@@ -988,62 +1260,46 @@
                         postsToDisplay = postsToDisplay.filter(post => post.user_id !== currentUserId);
                         console.log('Filtered out own posts, remaining:', postsToDisplay.length);
                         
-                        if (currentFilter === 'online') {
-                            // Фильтр "Онлайн" - показываем только онлайн пользователей
+                        // Применяем фильтр по возрасту для всех фильтров
+                        if (ageFilter.enabled) {
                             postsToDisplay = postsToDisplay.filter(post => {
-                                const isOnline = post.is_online === 1 || post.is_online === '1';
-                                return isOnline;
+                                const age = parseInt(post.age);
+                                return age >= ageFilter.min && age <= ageFilter.max;
                             });
-                            console.log('Filtered online users:', postsToDisplay.length);
-                            
-                            // Применяем фильтр по возрасту если включен
-                            if (ageFilter.enabled) {
-                                postsToDisplay = postsToDisplay.filter(post => {
-                                    const age = parseInt(post.age);
-                                    return age >= ageFilter.min && age <= ageFilter.max;
+                        }
+                        
+                        if (currentFilter === 'nearby') {
+                            // Фильтр "Рядом" - сортируем по расстоянию
+                            if (userLocation.latitude && userLocation.longitude) {
+                                // Вычисляем расстояние для каждого поста
+                                postsToDisplay = postsToDisplay.map(post => {
+                                    const distance = getDistanceToPost(post);
+                                    return {
+                                        ...post,
+                                        calculatedDistance: distance
+                                    };
                                 });
-                                console.log('Filtered by age:', ageFilter.min, '-', ageFilter.max, '→', postsToDisplay.length, 'posts');
-                            }
-                        } else {
-                            // Применяем фильтр по возрасту для других фильтров
-                            if (ageFilter.enabled) {
-                                postsToDisplay = postsToDisplay.filter(post => {
-                                    const age = parseInt(post.age);
-                                    return age >= ageFilter.min && age <= ageFilter.max;
+                                
+                                // Сортируем по расстоянию (от ближайших к дальним)
+                                postsToDisplay.sort((a, b) => {
+                                    // Посты без координат в конец
+                                    if (a.calculatedDistance === null) return 1;
+                                    if (b.calculatedDistance === null) return -1;
+                                    return a.calculatedDistance - b.calculatedDistance;
                                 });
-                                console.log('Filtered by age:', ageFilter.min, '-', ageFilter.max, '→', postsToDisplay.length, 'posts');
-                            }
-                            
-                            if (currentFilter === 'nearby') {
-                                // Фильтр "Рядом" - сортируем по расстоянию
-                                if (userLocation.latitude && userLocation.longitude) {
-                                    // Вычисляем расстояние для каждого поста
-                                    postsToDisplay = postsToDisplay.map(post => {
-                                        const distance = getDistanceToPost(post);
-                                        return {
-                                            ...post,
-                                            calculatedDistance: distance
-                                        };
-                                    });
-                                    
-                                    // Сортируем по расстоянию (от ближайших к дальним)
-                                    postsToDisplay.sort((a, b) => {
-                                        // Посты без координат в конец
-                                        if (a.calculatedDistance === null) return 1;
-                                        if (b.calculatedDistance === null) return -1;
-                                        return a.calculatedDistance - b.calculatedDistance;
-                                    });
-                                    
-                                    console.log('Sorted by distance:', postsToDisplay.map(p => ({
-                                        id: p.id,
-                                        distance: p.calculatedDistance
-                                    })));
-                                } else {
-                                    console.log('No user location for nearby sorting');
-                                }
+                                
+                                console.log('Sorted by distance:', postsToDisplay.map(p => ({
+                                    id: p.id,
+                                    distance: p.calculatedDistance
+                                })));
+                            } else {
+                                console.log('No user location for nearby sorting');
                             }
                         }
                     }
+                    
+                    // Сохраняем посты в глобальную переменную
+                    currentPosts = postsToDisplay;
                     
                     displayPosts(postsToDisplay);
                 } else {
@@ -1109,9 +1365,9 @@
                 
                 // Меняем текст подсказки
                 if (pullDistance > 80) {
-                    pullIndicator.querySelector('.pull-text').textContent = '↓ Отпустите для обновления';
+                    pullIndicator.querySelector('.pull-text').textContent = '←“ Отпустите для обновления';
                 } else if (pullDistance > 10) {
-                    pullIndicator.querySelector('.pull-text').textContent = '↓ Потяните вниз';
+                    pullIndicator.querySelector('.pull-text').textContent = '←“ Потяните вниз';
                 }
             }, { passive: true });
             
@@ -1203,18 +1459,6 @@
                 return;
             }
             
-            // Проверяем если нет онлайн пользователей
-            if (posts.length === 0 && currentFilter === 'online') {
-                content.innerHTML = `
-                    <div style="text-align: center; padding: 60px 20px; color: #666;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">💤</div>
-                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 10px;">Сейчас никого нет онлайн</div>
-                        <div style="font-size: 14px;">Попробуйте проверить позже</div>
-                    </div>
-                `;
-                return;
-            }
-            
             // Показываем подсказку если фильтр "Рядом" но нет геолокации
             if (currentFilter === 'nearby' && !userLocation.latitude) {
                 const hint = document.createElement('div');
@@ -1284,15 +1528,14 @@
             const isOnline = post.is_online === 1 || post.is_online === '1';
             const onlineClass = isOnline ? 'online' : 'offline';
             
-            // Определяем что показывать в card-image (фото поста или аватар)
-            let cardImageHtml;
-            if (post.photo) {
+            // Определяем что показывать в card-image (только если есть фото)
+            let cardImageHtml = '';
+            // Проверяем что фото реально есть (не null, не пустая строка, не "null")
+            if (post.photo && post.photo !== 'null' && post.photo !== '' && post.photo !== 'undefined') {
                 // Если есть фото поста - показываем его
                 cardImageHtml = `<div class="card-image" style="background: none; padding: 0; overflow: hidden;"><img src="${post.photo}" alt="Фото" style="width: 100%; height: 100%; object-fit: cover;"></div>`;
-            } else {
-                // Если нет фото - показываем аватар
-                cardImageHtml = `<div class="card-image">${post.avatar}</div>`;
             }
+            // Если нет фото - не добавляем блок изображения вообще
             
             card.innerHTML = `
                 ${cardImageHtml}
@@ -1313,7 +1556,7 @@
                         <div class="card-time-left">
                             <span>${timeAgo}</span>
                             <span class="card-timer">
-                                <span class="card-timer-icon">◷</span>
+                                <span class="card-timer-icon">⏱</span>
                                 <span class="post-timer" data-minutes-left="${post.minutes_left}" data-expires="${expiresAt}">
                                     ${formatMinutesToTime(post.minutes_left)}
                                 </span>
@@ -1495,11 +1738,21 @@
             // Проверяем авторизацию
             if (checkAuth()) {
                 // Пользователь уже авторизован
+                
+                // Сбрасываем фильтр на nearby
+                currentFilter = 'nearby';
+                document.querySelectorAll('.filter-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                const nearbyFilter = document.querySelector('.filter-item[onclick*="nearby"]');
+                if (nearbyFilter) nearbyFilter.classList.add('active');
+                
                 requestGeolocation(); // Запрашиваем геолокацию
                 document.getElementById('mainScreen').classList.add('active');
                 loadPostsFromServer();
                 initPullToRefresh(); // Инициализируем pull-to-refresh
                 initAgeFilter(); // Инициализируем фильтр возраста
+                startUnreadCheck(); // Проверка непрочитанных сообщений
             } else {
                 // Показываем экран входа
                 document.getElementById('loginScreen').classList.add('active');
@@ -1514,49 +1767,84 @@
         
         let backPressedOnce = false;
         let backPressTimer = null;
+        let navigationHistory = ['mainScreen']; // Стек навигации
         
-        // Обработка кнопки "Назад" браузера (включая Android)
+        // Функция навигации с историей
+        function navigateTo(screenId) {
+            // Добавляем в стек если это не тот же экран
+            if (navigationHistory[navigationHistory.length - 1] !== screenId) {
+                navigationHistory.push(screenId);
+                window.history.pushState({screen: screenId}, '', window.location.href);
+            }
+            showScreen(screenId);
+        }
+        
+        // Функция возврата назад
+        function navigateBack() {
+            if (navigationHistory.length > 1) {
+                navigationHistory.pop(); // Убираем текущий
+                const previousScreen = navigationHistory[navigationHistory.length - 1];
+                showScreen(previousScreen);
+                return true;
+            }
+            return false; // Некуда возвращаться
+        }
+        
+        // Инициализация истории браузера
+        window.history.replaceState({screen: 'mainScreen'}, '', window.location.href);
+        
+        // Обработка кнопки "Назад" браузера
         window.addEventListener('popstate', function(event) {
-            // Проверяем текущий экран
             const currentScreen = document.querySelector('.screen.active');
             const currentScreenId = currentScreen ? currentScreen.id : null;
             
-            console.log('Back button pressed, current screen:', currentScreenId);
+            console.log('Back pressed, screen:', currentScreenId, 'history:', navigationHistory);
             
-            // Если мы на главном экране (mainScreen)
-            if (currentScreenId === 'mainScreen') {
+            // Всегда сначала предотвращаем выход - добавляем запись обратно
+            window.history.pushState({screen: currentScreenId}, '', window.location.href);
+            
+            if (currentScreenId === 'chatScreen') {
+                // Из чата - в список чатов
+                closeChat();
+                // Обновляем стек
+                navigationHistory = navigationHistory.filter(s => s !== 'chatScreen');
+            } else if (currentScreenId === 'chatsScreen') {
+                // Из списка чатов - на главную
+                showScreen('mainScreen');
+                navigationHistory = ['mainScreen'];
+            } else if (currentScreenId === 'userProfileScreen') {
+                // Из профиля пользователя - на главную
+                showScreen('mainScreen');
+                navigationHistory = ['mainScreen'];
+            } else if (currentScreenId === 'settingsScreen' || 
+                       currentScreenId === 'profileScreen' ||
+                       currentScreenId === 'editProfileScreen' ||
+                       currentScreenId === 'changePasswordScreen') {
+                // Из настроек/профиля - на главную
+                showScreen('mainScreen');
+                navigationHistory = ['mainScreen'];
+            } else if (currentScreenId === 'mainScreen') {
+                // На главной - предупреждение о выходе
                 if (backPressedOnce) {
-                    // Второе нажатие - выходим из приложения
-                    console.log('Second back press - allowing exit');
-                    // Не предотвращаем событие - позволяем выйти
-                    return;
+                    // Второе нажатие - выходим
+                    showToast('Выход из приложения...');
+                    // Убираем запись из истории чтобы выйти
+                    window.history.go(-2);
                 } else {
-                    // Первое нажатие - показываем предупреждение
-                    event.preventDefault();
                     backPressedOnce = true;
                     showToast('Нажмите ещё раз для выхода');
                     
-                    // Восстанавливаем историю чтобы остаться на странице
-                    window.history.pushState(null, '', window.location.href);
-                    
-                    // Сбрасываем флаг через 2 секунды
                     if (backPressTimer) clearTimeout(backPressTimer);
                     backPressTimer = setTimeout(() => {
                         backPressedOnce = false;
-                        console.log('Back press timeout - reset');
-                    }, 2000);
+                    }, 2500);
                 }
             } else {
-                // Если мы на другом экране - возвращаемся на главный
-                event.preventDefault();
-                console.log('Not on main screen - going to main');
+                // Остальные экраны - на главную
                 showScreen('mainScreen');
-                window.history.pushState(null, '', window.location.href);
+                navigationHistory = ['mainScreen'];
             }
         });
-        
-        // Инициализация истории браузера
-        window.history.pushState(null, '', window.location.href);
 
         // Start post timers on load
         function startTimer() {
@@ -1569,6 +1857,18 @@
                 screen.classList.remove('active');
             });
             document.getElementById(screenId).classList.add('active');
+            
+            // Останавливаем polling чата при выходе из экрана чата
+            if (screenId !== 'chatScreen') {
+                stopChatPolling();
+                currentChatId = null;
+                currentChatUserId = null;
+            }
+            
+            // Останавливаем polling списка чатов при выходе из экрана чатов
+            if (screenId !== 'chatsScreen') {
+                stopChatsListPolling();
+            }
             
             // Если это главный экран - прокручиваем его контент
             if (screenId === 'mainScreen') {
@@ -1955,6 +2255,16 @@
                 document.getElementById('postPhotoInput').value = '';
                 cropperState = null;
             });
+            
+            // Enter для отправки сообщения в чате
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            }
         });
         
         // Удаление фото поста
@@ -2268,18 +2578,998 @@
         });
 
         // Open request details
-        function openRequest(id) {
-            alert('Открытие детальной страницы запроса #' + id);
+        // ============================================
+        // ПРОСМОТР ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ
+        // ============================================
+        
+        let viewingUserId = null;
+        
+        async function openRequest(postId) {
+            // Находим пост и открываем профиль его автора
+            const post = currentPosts.find(p => p.id === postId);
+            if (post) {
+                await openUserProfile(post.user_id);
+            }
+        }
+        
+        async function openUserProfile(userId) {
+            viewingUserId = userId;
+            
+            try {
+                // Загружаем данные пользователя
+                const response = await fetch(`${API_URL}/users.php?action=get_profile&user_id=${userId}`);
+                const data = await response.json();
+                
+                if (data.success && data.user) {
+                    const user = data.user;
+                    
+                    // Заполняем профиль
+                    document.getElementById('userProfileAvatar').textContent = user.avatar || '👤';
+                    document.getElementById('userProfileName').textContent = user.name || 'Пользователь';
+                    document.getElementById('userProfileAge').textContent = user.age || '?';
+                    document.getElementById('userProfileGender').textContent = user.gender === 'male' ? 'М' : user.gender === 'female' ? 'Ж' : '';
+                    document.getElementById('userProfileLocation').textContent = '📍 ' + (user.city || '') + (user.city && user.country ? ', ' : '') + (user.country || 'Не указано');
+                    document.getElementById('userProfileBio').textContent = user.bio || 'Пользователь пока ничего не написал о себе';
+                    
+                    // Онлайн статус
+                    const onlineEl = document.getElementById('userProfileOnline');
+                    if (user.is_online) {
+                        onlineEl.innerHTML = '<span class="online-dot"></span> В сети';
+                        onlineEl.classList.remove('offline');
+                    } else {
+                        onlineEl.innerHTML = '<span class="online-dot"></span> Не в сети';
+                        onlineEl.classList.add('offline');
+                    }
+                    
+                    // Скрываем кнопки жалобы и сообщения если это свой профиль
+                    const reportBtn = document.getElementById('userProfileReportBtn');
+                    const chatBtn = document.getElementById('userProfileChatBtn');
+                    const editBioBtn = document.getElementById('editBioBtn');
+                    if (userId === currentUserId) {
+                        reportBtn.style.display = 'none';
+                        chatBtn.style.display = 'none';
+                        editBioBtn.style.display = 'flex';
+                    } else {
+                        reportBtn.style.display = 'block';
+                        chatBtn.style.display = 'block';
+                        editBioBtn.style.display = 'none';
+                    }
+                    
+                    // Загружаем посты пользователя
+                    await loadUserPosts(userId);
+                    
+                    // Показываем экран
+                    showScreen('userProfileScreen');
+                } else {
+                    await showError('Не удалось загрузить профиль');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                await showError('Ошибка загрузки профиля');
+            }
+        }
+        
+        async function loadUserPosts(userId) {
+            const postsContainer = document.getElementById('userProfilePosts');
+            
+            try {
+                const response = await fetch(`${API_URL}/posts.php?user_id=${userId}`);
+                const data = await response.json();
+                
+                if (data.success && data.posts && data.posts.length > 0) {
+                    postsContainer.innerHTML = data.posts.map(post => `
+                        <div class="user-profile-post-card" onclick="openPostDetail(${post.id}, ${userId})">
+                            <div class="user-profile-post-text">${post.text.length > 100 ? post.text.substring(0, 100) + '...' : post.text}</div>
+                            ${post.photo ? '<div class="user-profile-post-has-photo">📷 Есть фото</div>' : ''}
+                            <div class="user-profile-post-time">
+                                ${formatTimeAgo(post.minutes_ago)} • осталось ${formatMinutesToTime(post.minutes_left)}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    postsContainer.innerHTML = '<div class="user-profile-no-posts">Нет активных объявлений</div>';
+                }
+            } catch (error) {
+                postsContainer.innerHTML = '<div class="user-profile-no-posts">Ошибка загрузки объявлений</div>';
+            }
+        }
+        
+        function closeUserProfile() {
+            viewingUserId = null;
+            showScreen('mainScreen');
+        }
+        
+        // Открытие детального просмотра поста
+        let currentDetailPost = null;
+        
+        async function openPostDetail(postId, userId) {
+            try {
+                const response = await fetch(`${API_URL}/posts.php?user_id=${userId}`);
+                const data = await response.json();
+                
+                if (data.success && data.posts) {
+                    const post = data.posts.find(p => p.id === postId);
+                    if (post) {
+                        currentDetailPost = post;
+                        showPostDetailModal(post);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading post:', error);
+            }
+        }
+        
+        function showPostDetailModal(post) {
+            const modal = document.getElementById('postDetailModal');
+            
+            document.getElementById('postDetailAvatar').textContent = post.avatar || '👤';
+            document.getElementById('postDetailName').textContent = post.name;
+            document.getElementById('postDetailAge').textContent = post.age + ' лет';
+            document.getElementById('postDetailText').textContent = post.text;
+            document.getElementById('postDetailTime').textContent = formatTimeAgo(post.minutes_ago) + ' • осталось ' + formatMinutesToTime(post.minutes_left);
+            
+            const photoContainer = document.getElementById('postDetailPhoto');
+            if (post.photo && post.photo !== 'null' && post.photo !== '') {
+                photoContainer.innerHTML = `<img src="${post.photo}" alt="Фото" style="width: 100%; border-radius: 12px;">`;
+                photoContainer.style.display = 'block';
+            } else {
+                photoContainer.style.display = 'none';
+            }
+            
+            modal.classList.add('active');
+        }
+        
+        function closePostDetail() {
+            document.getElementById('postDetailModal').classList.remove('active');
+            currentDetailPost = null;
+        }
+        
+        // ============================================
+        // РЕДАКТИРОВАНИЕ "О СЕБЕ"
+        // ============================================
+        
+        function editBio() {
+            const currentBio = document.getElementById('userProfileBio').textContent;
+            const textarea = document.getElementById('editBioTextarea');
+            textarea.value = currentBio === 'Пользователь пока ничего не написал о себе' ? '' : currentBio;
+            document.getElementById('bioCharCount').textContent = textarea.value.length;
+            
+            // Добавляем обработчик счетчика символов
+            textarea.oninput = function() {
+                document.getElementById('bioCharCount').textContent = this.value.length;
+            };
+            
+            document.getElementById('editBioModal').classList.add('active');
+        }
+        
+        function closeEditBio() {
+            document.getElementById('editBioModal').classList.remove('active');
+        }
+        
+        async function saveBio() {
+            const bio = document.getElementById('editBioTextarea').value.trim();
+            
+            try {
+                const response = await fetch(`${API_URL}/users.php`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: currentUserId,
+                        bio: bio
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('userProfileBio').textContent = bio || 'Пользователь пока ничего не написал о себе';
+                    currentUser.bio = bio;
+                    localStorage.setItem('meetgo_user', JSON.stringify(currentUser));
+                    closeEditBio();
+                    await showSuccess('Сохранено');
+                } else {
+                    await showError(data.error || 'Ошибка сохранения');
+                }
+            } catch (error) {
+                console.error('Save bio error:', error);
+                await showError('Ошибка сохранения');
+            }
+        }
+        
+        function openChatWithUser() {
+            if (viewingUserId) {
+                openChat(viewingUserId);
+            }
+        }
+        
+        async function reportUser() {
+            if (!viewingUserId) return;
+            
+            const confirmed = await showConfirm(
+                'Вы уверены, что хотите пожаловаться на этого пользователя?',
+                'Жалоба на пользователя',
+                '⚠️'
+            );
+            
+            if (confirmed) {
+                try {
+                    const response = await fetch(`${API_URL}/reports.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            reporter_id: currentUserId,
+                            reported_user_id: viewingUserId,
+                            type: 'user',
+                            reason: 'Жалоба на пользователя'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        await showSuccess('Жалоба отправлена');
+                    } else {
+                        await showError(data.error || 'Ошибка отправки жалобы');
+                    }
+                } catch (error) {
+                    console.error('Report error:', error);
+                    await showError('Ошибка отправки жалобы');
+                }
+            }
         }
 
-        // Open chat
-        function openChat(id) {
-            alert('Открытие чата с пользователем #' + id);
+        // ============================================
+        // СИСТЕМА ЧАТОВ
+        // ============================================
+        
+        let currentChatId = null;
+        let currentChatUserId = null;
+        let chatPollingInterval = null;
+        let unreadCheckInterval = null;
+        
+        // Обновить индикатор непрочитанных в меню
+        function updateUnreadIndicator(count) {
+            console.log('updateUnreadIndicator called with:', count);
+            const dot = document.getElementById('navUnreadDot');
+            console.log('navUnreadDot element:', dot);
+            if (dot) {
+                dot.style.display = count > 0 ? 'block' : 'none';
+                console.log('dot display set to:', dot.style.display);
+            }
+        }
+        
+        // Проверить непрочитанные сообщения
+        async function checkUnreadMessages() {
+            if (!currentUserId) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/chats.php?action=list&user_id=${currentUserId}`);
+                const data = await response.json();
+                
+                if (data.success && data.chats) {
+                    const totalUnread = data.chats.reduce((sum, chat) => sum + (parseInt(chat.unread_count) || 0), 0);
+                    updateUnreadIndicator(totalUnread);
+                }
+            } catch (error) {
+                console.error('Error checking unread:', error);
+            }
+        }
+        
+        // Запустить периодическую проверку непрочитанных
+        function startUnreadCheck() {
+            stopUnreadCheck();
+            checkUnreadMessages();
+            unreadCheckInterval = setInterval(checkUnreadMessages, 30000); // каждые 30 секунд
+        }
+        
+        // Остановить проверку
+        function stopUnreadCheck() {
+            if (unreadCheckInterval) {
+                clearInterval(unreadCheckInterval);
+                unreadCheckInterval = null;
+            }
+        }
+        
+        // Polling для списка чатов
+        let chatsListPollingInterval = null;
+        
+        // Открыть список чатов
+        async function openChatsScreen() {
+            // Добавляем в историю навигации
+            if (!navigationHistory.includes('chatsScreen')) {
+                navigationHistory.push('chatsScreen');
+                window.history.pushState({screen: 'chatsScreen'}, '', window.location.href);
+            }
+            showScreen('chatsScreen');
+            await loadChatsList();
+            startChatsListPolling();
+        }
+        
+        // Запустить polling списка чатов
+        function startChatsListPolling() {
+            stopChatsListPolling();
+            chatsListPollingInterval = setInterval(async () => {
+                const chatsScreen = document.getElementById('chatsScreen');
+                if (chatsScreen && chatsScreen.classList.contains('active')) {
+                    await loadChatsList();
+                }
+            }, 5000); // каждые 5 секунд
+        }
+        
+        // Остановить polling списка чатов
+        function stopChatsListPolling() {
+            if (chatsListPollingInterval) {
+                clearInterval(chatsListPollingInterval);
+                chatsListPollingInterval = null;
+            }
+        }
+        
+        // Загрузить список чатов
+        async function loadChatsList() {
+            const chatsList = document.getElementById('chatsList');
+            const chatsEmpty = document.getElementById('chatsEmpty');
+            
+            try {
+                const response = await fetch(`${API_URL}/chats.php?action=list&user_id=${currentUserId}`);
+                const data = await response.json();
+                
+                if (data.success && data.chats && data.chats.length > 0) {
+                    chatsList.style.display = 'block';
+                    chatsEmpty.style.display = 'none';
+                    
+                    // Считаем общее количество непрочитанных
+                    const totalUnread = data.chats.reduce((sum, chat) => sum + (parseInt(chat.unread_count) || 0), 0);
+                    updateUnreadIndicator(totalUnread);
+                    
+                    chatsList.innerHTML = data.chats.map(chat => `
+                        <div class="chat-item" onclick="openChat(${chat.other_user_id}, ${chat.chat_id})">
+                            <div class="chat-item-avatar">
+                                ${chat.other_user_avatar || '👤'}
+                                ${chat.is_online == 1 ? '<div class="chat-item-online"></div>' : ''}
+                            </div>
+                            <div class="chat-item-content">
+                                <div class="chat-item-header">
+                                    <div class="chat-item-name">${chat.other_user_name}</div>
+                                    <div class="chat-item-time">${formatChatTime(chat.last_message_time)}</div>
+                                </div>
+                                <div class="chat-item-message ${chat.unread_count > 0 ? 'unread' : ''}">${chat.last_message || 'Нет сообщений'}</div>
+                            </div>
+                            ${chat.unread_count > 0 ? `<div class="chat-item-unread">${chat.unread_count}</div>` : ''}
+                        </div>
+                    `).join('');
+                } else {
+                    chatsList.style.display = 'none';
+                    chatsEmpty.style.display = 'flex';
+                    updateUnreadIndicator(0);
+                }
+            } catch (error) {
+                console.error('Error loading chats:', error);
+            }
+        }
+        
+        // Форматирование времени для списка чатов
+        function formatChatTime(dateString) {
+            if (!dateString) return '';
+            // Серверное время MySQL формата - считаем как UTC
+            let date;
+            if (dateString.includes('T') || dateString.includes('Z')) {
+                date = new Date(dateString);
+            } else {
+                date = new Date(dateString.replace(' ', 'T') + 'Z');
+            }
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'сейчас';
+            if (diff < 3600000) return Math.floor(diff / 60000) + ' мин';
+            if (diff < 86400000) return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            if (diff < 604800000) {
+                const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+                return days[date.getDay()];
+            }
+            return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        }
+        
+        // Открыть чат с пользователем
+        let currentChatBlocked = false;
+        let currentChatBlockedByMe = false;
+        
+        async function openChat(userId, chatId = null) {
+            currentChatUserId = userId;
+            currentChatId = chatId;
+            currentChatBlocked = false;
+            currentChatBlockedByMe = false;
+            
+            // Останавливаем polling списка чатов
+            stopChatsListPolling();
+            
+            // Добавляем в историю навигации
+            navigationHistory.push('chatScreen');
+            window.history.pushState({screen: 'chatScreen'}, '', window.location.href);
+            
+            showScreen('chatScreen');
+            
+            try {
+                let url = `${API_URL}/chats.php?action=messages&user_id=${currentUserId}`;
+                if (chatId) {
+                    url += `&chat_id=${chatId}`;
+                } else {
+                    url += `&other_user_id=${userId}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentChatId = data.chat_id; // может быть null для нового чата
+                    currentChatBlocked = data.is_blocked || false;
+                    currentChatBlockedByMe = data.blocked_by_me || false;
+                    
+                    // Заполняем шапку чата
+                    document.getElementById('chatAvatar').textContent = data.other_user.avatar || '👤';
+                    document.getElementById('chatUserName').textContent = data.other_user.name;
+                    
+                    const statusEl = document.getElementById('chatUserStatus');
+                    if (data.other_user.is_online == 1) {
+                        statusEl.textContent = 'В сети';
+                        statusEl.classList.remove('offline');
+                    } else {
+                        statusEl.textContent = 'Не в сети';
+                        statusEl.classList.add('offline');
+                    }
+                    
+                    // Обновляем кнопку блокировки
+                    updateBlockButton();
+                    
+                    // Обновляем поле ввода
+                    updateChatInput();
+                    
+                    // Сбрасываем флаг инициализации для автоскролла
+                    document.getElementById('chatMessages').dataset.initialized = '';
+                    
+                    // Отображаем сообщения
+                    displayMessages(data.messages);
+                    
+                    // Запускаем polling только если есть существующий чат
+                    if (currentChatId) {
+                        startChatPolling();
+                    }
+                }
+            } catch (error) {
+                console.error('Error opening chat:', error);
+            }
+        }
+        
+        // Обновление кнопки блокировки
+        function updateBlockButton() {
+            const btn = document.getElementById('blockUserBtn');
+            if (btn) {
+                if (currentChatBlockedByMe) {
+                    btn.innerHTML = '✓ Разблокировать';
+                    btn.onclick = unblockChatUser;
+                } else {
+                    btn.innerHTML = '🚫 Заблокировать';
+                    btn.onclick = blockChatUser;
+                }
+            }
+        }
+        
+        // Обновление поля ввода при блокировке
+        function updateChatInput() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('chatSendBtn');
+            
+            if (currentChatBlocked) {
+                input.disabled = true;
+                input.placeholder = 'Чат заблокирован';
+                sendBtn.disabled = true;
+            } else {
+                input.disabled = false;
+                input.placeholder = 'Сообщение...';
+                sendBtn.disabled = false;
+            }
+        }
+        
+        // Отображение сообщений
+        function displayMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            
+            console.log('displayMessages called with:', messages);
+            
+            if (!messages || messages.length === 0) {
+                container.innerHTML = '<div class="chats-empty-hint" style="text-align: center; padding: 40px;">Напишите первое сообщение!</div>';
+                return;
+            }
+            
+            // Находим индексы последнего прочитанного и последнего непрочитанного исходящего сообщения
+            let lastReadOutgoingIndex = -1;
+            let lastUnreadOutgoingIndex = -1;
+            
+            for (let i = messages.length - 1; i >= 0; i--) {
+                const msg = messages[i];
+                if (msg.sender_id == currentUserId) {
+                    console.log(`Outgoing msg ${i}: is_read=${msg.is_read}, text="${msg.message?.substring(0,20)}"`);
+                    if (msg.is_read == 1 && lastReadOutgoingIndex === -1) {
+                        lastReadOutgoingIndex = i;
+                    }
+                    if (msg.is_read == 0 && lastUnreadOutgoingIndex === -1) {
+                        lastUnreadOutgoingIndex = i;
+                    }
+                }
+            }
+            
+            console.log(`lastReadOutgoingIndex=${lastReadOutgoingIndex}, lastUnreadOutgoingIndex=${lastUnreadOutgoingIndex}`);
+            
+            container.innerHTML = messages.map((msg, index) => {
+                console.log('Message object:', msg);
+                const isOutgoing = msg.sender_id == currentUserId;
+                const replyHtml = msg.reply_to_id ? `
+                    <div class="message-reply" onclick="scrollToMessage(${msg.reply_to_id})">
+                        <div class="message-reply-name">${msg.reply_sender_name || 'Сообщение'}</div>
+                        <div class="message-reply-text">${(msg.reply_message || '').substring(0, 50)}${msg.reply_message && msg.reply_message.length > 50 ? '...' : ''}</div>
+                    </div>
+                ` : '';
+                
+                // Определяем статус доставки только для исходящих
+                let statusHtml = '';
+                if (isOutgoing) {
+                    // Показываем статус только под последним прочитанным и последним непрочитанным
+                    if (index === lastReadOutgoingIndex && lastUnreadOutgoingIndex === -1) {
+                        // Все сообщения прочитаны - показываем под последним
+                        statusHtml = '<div class="message-status">Прочитано</div>';
+                    } else if (index === lastReadOutgoingIndex && lastUnreadOutgoingIndex > lastReadOutgoingIndex) {
+                        // Есть непрочитанные после прочитанных - показываем под последним прочитанным
+                        statusHtml = '<div class="message-status">Прочитано</div>';
+                    } else if (index === lastUnreadOutgoingIndex) {
+                        // Последнее непрочитанное
+                        statusHtml = '<div class="message-status">Доставлено</div>';
+                    }
+                }
+                
+                return `
+                <div class="message ${isOutgoing ? 'message-outgoing' : 'message-incoming'}" 
+                     data-message-id="${msg.id}" 
+                     data-message-text="${(msg.message || '').replace(/"/g, '&quot;')}"
+                     data-sender-name="${msg.sender_name || ''}"
+                     data-sender-id="${msg.sender_id}">
+                    ${replyHtml}
+                    ${msg.message}
+                    <div class="message-time">${formatMessageTime(msg.created_at)}</div>
+                    ${statusHtml}
+                </div>
+            `}).join('');
+            
+            // Прокручиваем вниз только если пользователь был внизу или это первая загрузка
+            const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+            if (isAtBottom || !container.dataset.initialized) {
+                container.scrollTop = container.scrollHeight;
+                container.dataset.initialized = 'true';
+            }
+            
+            // Инициализируем свайпы для сообщений
+            initMessageSwipes();
+        }
+        
+        // Переменные для ответа на сообщение
+        let replyToMessageId = null;
+        let replyToMessageText = null;
+        let replyToSenderName = null;
+        
+        // Инициализация свайпов для сообщений
+        function initMessageSwipes() {
+            const messages = document.querySelectorAll('.message');
+            
+            messages.forEach(msg => {
+                let startX = 0;
+                let currentX = 0;
+                let isDragging = false;
+                const isOutgoing = msg.classList.contains('message-outgoing');
+                
+                msg.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    isDragging = true;
+                    msg.style.transition = 'none';
+                }, { passive: true });
+                
+                msg.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    
+                    currentX = e.touches[0].clientX;
+                    let diff = currentX - startX;
+                    
+                    // Ограничиваем направление свайпа
+                    if (isOutgoing) {
+                        // Исходящие - свайп вправо
+                        diff = Math.max(0, Math.min(diff, 80));
+                    } else {
+                        // Входящие - свайп влево
+                        diff = Math.min(0, Math.max(diff, -80));
+                    }
+                    
+                    msg.style.transform = `translateX(${diff}px)`;
+                }, { passive: true });
+                
+                msg.addEventListener('touchend', () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    
+                    const diff = currentX - startX;
+                    msg.style.transition = 'transform 0.2s ease';
+                    msg.style.transform = 'translateX(0)';
+                    
+                    // Если свайп достаточный - выбираем сообщение для ответа
+                    if ((isOutgoing && diff > 50) || (!isOutgoing && diff < -50)) {
+                        const messageId = msg.dataset.messageId;
+                        const messageText = msg.dataset.messageText;
+                        const senderName = msg.dataset.senderName;
+                        const senderId = msg.dataset.senderId;
+                        
+                        selectMessageForReply(parseInt(messageId), messageText, senderName, parseInt(senderId));
+                        
+                        // Вибрация если поддерживается
+                        if (navigator.vibrate) {
+                            navigator.vibrate(30);
+                        }
+                    }
+                    
+                    startX = 0;
+                    currentX = 0;
+                });
+            });
+        }
+        
+        // Выбор сообщения для ответа
+        function selectMessageForReply(messageId, messageText, senderName, senderId) {
+            replyToMessageId = messageId;
+            replyToMessageText = messageText;
+            replyToSenderName = senderId == currentUserId ? 'Вы' : senderName;
+            
+            // Показываем превью ответа
+            showReplyPreview();
+        }
+        
+        // Показать превью ответа
+        function showReplyPreview() {
+            let preview = document.getElementById('replyPreview');
+            if (!preview) {
+                const inputContainer = document.querySelector('.chat-input-container');
+                preview = document.createElement('div');
+                preview.id = 'replyPreview';
+                preview.className = 'reply-preview';
+                inputContainer.insertBefore(preview, inputContainer.firstChild);
+            }
+            
+            preview.innerHTML = `
+                <div class="reply-preview-content">
+                    <div class="reply-preview-name">${replyToSenderName}</div>
+                    <div class="reply-preview-text">${replyToMessageText.substring(0, 50)}${replyToMessageText.length > 50 ? '...' : ''}</div>
+                </div>
+                <div class="reply-preview-close" onclick="cancelReply(event)">✕</div>
+            `;
+            preview.style.display = 'flex';
+            
+            // Фокус на поле ввода
+            document.getElementById('chatInput').focus();
+        }
+        
+        // Отменить ответ
+        function cancelReply(event) {
+            if (event) event.stopPropagation();
+            replyToMessageId = null;
+            replyToMessageText = null;
+            replyToSenderName = null;
+            
+            const preview = document.getElementById('replyPreview');
+            if (preview) {
+                preview.style.display = 'none';
+            }
+        }
+        
+        // Прокрутка к сообщению
+        function scrollToMessage(messageId) {
+            const message = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (message) {
+                message.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                message.classList.add('message-highlighted');
+                setTimeout(() => message.classList.remove('message-highlighted'), 1500);
+            }
+        }
+        
+        // Форматирование времени сообщения
+        function formatMessageTime(dateString) {
+            // Если это серверное время (без Z), добавляем указание что это UTC
+            let date;
+            if (dateString.includes('T') || dateString.includes('Z')) {
+                date = new Date(dateString);
+            } else {
+                // Серверное время MySQL формата "YYYY-MM-DD HH:MM:SS" - считаем как UTC
+                date = new Date(dateString.replace(' ', 'T') + 'Z');
+            }
+            return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Отправка сообщения
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/chats.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sender_id: currentUserId,
+                        receiver_id: currentChatUserId,
+                        chat_id: currentChatId,
+                        text: text,
+                        reply_to_id: replyToMessageId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    input.value = '';
+                    
+                    // Если это был новый чат - сохраняем chat_id и запускаем polling
+                    const wasNewChat = !currentChatId;
+                    currentChatId = data.chat_id;
+                    
+                    if (wasNewChat) {
+                        startChatPolling();
+                    }
+                    
+                    // Добавляем сообщение в UI
+                    const container = document.getElementById('chatMessages');
+                    const emptyHint = container.querySelector('.chats-empty-hint');
+                    if (emptyHint) emptyHint.remove();
+                    
+                    const replyHtml = replyToMessageId ? `
+                        <div class="message-reply">
+                            <div class="message-reply-name">${replyToSenderName}</div>
+                            <div class="message-reply-text">${replyToMessageText.substring(0, 50)}${replyToMessageText.length > 50 ? '...' : ''}</div>
+                        </div>
+                    ` : '';
+                    
+                    container.innerHTML += `
+                        <div class="message message-outgoing" data-message-id="${data.message_id}">
+                            ${replyHtml}
+                            ${text}
+                            <div class="message-time">${formatMessageTime(new Date().toISOString())}</div>
+                            <div class="message-status">Доставлено</div>
+                        </div>
+                    `;
+                    container.scrollTop = container.scrollHeight;
+                    
+                    // Инициализируем свайп для нового сообщения
+                    initMessageSwipes();
+                    
+                    // Сбрасываем reply
+                    cancelReply();
+                } else {
+                    // Ошибка - возможно заблокирован
+                    await showError(data.error || 'Не удалось отправить сообщение');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        }
+        
+        // Polling для новых сообщений
+        function startChatPolling() {
+            stopChatPolling();
+            chatPollingInterval = setInterval(async () => {
+                if (currentChatId) {
+                    try {
+                        const response = await fetch(`${API_URL}/chats.php?action=messages&user_id=${currentUserId}&chat_id=${currentChatId}`);
+                        const data = await response.json();
+                        if (data.success) {
+                            displayMessages(data.messages);
+                        }
+                    } catch (error) {
+                        console.error('Polling error:', error);
+                    }
+                }
+            }, 3000);
+        }
+        
+        function stopChatPolling() {
+            if (chatPollingInterval) {
+                clearInterval(chatPollingInterval);
+                chatPollingInterval = null;
+            }
+        }
+        
+        // Закрыть чат
+        function closeChat() {
+            showScreen('chatsScreen');
+            loadChatsList();
+            startChatsListPolling();
+        }
+        
+        // Открыть профиль пользователя из чата
+        function openChatUserProfile() {
+            if (currentChatUserId) {
+                stopChatPolling();
+                openUserProfile(currentChatUserId);
+            }
+        }
+        
+        // Меню чата
+        function showChatMenu() {
+            document.getElementById('chatMenuPopup').classList.add('active');
+            document.getElementById('menuOverlay').classList.add('active');
+        }
+        
+        function closeChatMenu() {
+            document.getElementById('chatMenuPopup').classList.remove('active');
+            document.getElementById('menuOverlay').classList.remove('active');
+        }
+        
+        async function reportChatUser() {
+            closeChatMenu();
+            
+            if (!currentChatUserId) return;
+            
+            const confirmed = await showConfirm(
+                'Вы уверены, что хотите пожаловаться на этого пользователя?',
+                'Жалоба на пользователя',
+                '⚠️'
+            );
+            
+            if (confirmed) {
+                try {
+                    const response = await fetch(`${API_URL}/reports.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            reporter_id: currentUserId,
+                            reported_user_id: currentChatUserId,
+                            chat_id: currentChatId,
+                            type: 'user',
+                            reason: 'Жалоба на пользователя из чата'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        await showSuccess('Жалоба отправлена');
+                    } else {
+                        await showError(data.error || 'Ошибка отправки жалобы');
+                    }
+                } catch (error) {
+                    console.error('Report error:', error);
+                    await showError('Ошибка отправки жалобы');
+                }
+            }
+        }
+        
+        async function deleteChat() {
+            closeChatMenu();
+            
+            if (!currentChatId) return;
+            
+            const confirmed = await showConfirm(
+                'Удалить этот чат? Все сообщения будут удалены.',
+                'Удаление чата',
+                '🗑'
+            );
+            
+            if (confirmed) {
+                try {
+                    const response = await fetch(`${API_URL}/chats.php`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: currentChatId,
+                            user_id: currentUserId
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        await showSuccess('Чат удалён');
+                        closeChat();
+                    } else {
+                        await showError(data.error || 'Ошибка удаления чата');
+                    }
+                } catch (error) {
+                    console.error('Delete chat error:', error);
+                    await showError('Ошибка удаления чата');
+                }
+            }
+        }
+        
+        // Заблокировать пользователя
+        async function blockChatUser() {
+            closeChatMenu();
+            
+            if (!currentChatUserId) return;
+            
+            const confirmed = await showConfirm(
+                'Заблокировать этого пользователя? Вы не сможете обмениваться сообщениями.',
+                'Блокировка',
+                '🚫'
+            );
+            
+            if (confirmed) {
+                try {
+                    const response = await fetch(`${API_URL}/chats.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'block',
+                            blocker_id: currentUserId,
+                            blocked_id: currentChatUserId
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        currentChatBlocked = true;
+                        currentChatBlockedByMe = true;
+                        updateBlockButton();
+                        updateChatInput();
+                        await showSuccess('Пользователь заблокирован');
+                    } else {
+                        await showError(data.error || 'Ошибка блокировки');
+                    }
+                } catch (error) {
+                    console.error('Block user error:', error);
+                    await showError('Ошибка блокировки');
+                }
+            }
+        }
+        
+        // Разблокировать пользователя
+        async function unblockChatUser() {
+            closeChatMenu();
+            
+            if (!currentChatUserId) return;
+            
+            const confirmed = await showConfirm(
+                'Разблокировать этого пользователя?',
+                'Разблокировка',
+                '✓'
+            );
+            
+            if (confirmed) {
+                try {
+                    const response = await fetch(`${API_URL}/chats.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'unblock',
+                            blocker_id: currentUserId,
+                            blocked_id: currentChatUserId
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        currentChatBlocked = false;
+                        currentChatBlockedByMe = false;
+                        updateBlockButton();
+                        updateChatInput();
+                        await showSuccess('Пользователь разблокирован');
+                    } else {
+                        await showError(data.error || 'Ошибка разблокировки');
+                    }
+                } catch (error) {
+                    console.error('Unblock user error:', error);
+                    await showError('Ошибка разблокировки');
+                }
+            }
         }
 
         // Show menu popup
         let currentPostId = null;
-        let currentPosts = []; // Глобальный массив постов
         
         function showMenu(event, postId, userId) {
             event.stopPropagation();

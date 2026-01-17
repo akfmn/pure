@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Meet&Go">
     <meta name="description" content="Знакомства здесь и сейчас">
     <link rel="manifest" href="manifest.json">
-	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="style.css?v=25">
     <title>Meet&Go Dating</title>
 </head>
 <body>
@@ -37,6 +37,22 @@
                 
                 <div class="auth-switch">
                     Нет аккаунта? <span onclick="showScreen('registerScreen')">Зарегистрироваться</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Recovery Modal -->
+        <div class="modal-overlay" id="recoveryModal">
+            <div class="recovery-modal">
+                <div class="recovery-icon">🔑</div>
+                <div class="recovery-title">Восстановление доступа</div>
+                <div class="recovery-message">Введите email, указанный при регистрации. Мы отправим на него ваш логин и новый пароль.</div>
+                <div class="recovery-input-container">
+                    <input type="email" class="recovery-input" id="recoveryEmail" placeholder="Ваш email">
+                </div>
+                <div class="recovery-buttons">
+                    <button class="recovery-btn recovery-btn-cancel" onclick="closeRecoveryModal()">Отмена</button>
+                    <button class="recovery-btn recovery-btn-send" onclick="sendRecoveryEmail()">Отправить</button>
                 </div>
             </div>
         </div>
@@ -122,7 +138,6 @@
                         <div class="filter-item active" onclick="selectFilter(this, 'nearby')">⦿ Рядом</div>
                         <div class="filter-item" onclick="selectFilter(this, 'new')">✦ Новые</div>
                         <div class="filter-item" id="ageFilterBtn" onclick="selectFilter(this, 'age')">◉ Возраст</div>
-                        <div class="filter-item" onclick="selectFilter(this, 'online')">● Онлайн</div>
                     </div>
                 </div>
             </div>
@@ -151,7 +166,7 @@
                             <div class="card-time-left">
                                 <span>23 минуты назад</span>
                                 <span class="card-timer">
-                                    <span class="card-timer-icon">◷</span>
+                                    <span class="card-timer-icon">⏱</span>
                                     <span class="post-timer" data-end="37">0:37:00</span>
                                 </span>
                             </div>
@@ -180,7 +195,7 @@
                             <div class="card-time-left">
                                 <span>45 минут назад</span>
                                 <span class="card-timer">
-                                    <span class="card-timer-icon">◷</span>
+                                    <span class="card-timer-icon">⏱</span>
                                     <span class="post-timer" data-end="15">0:15:00</span>
                                 </span>
                             </div>
@@ -209,7 +224,7 @@
                             <div class="card-time-left">
                                 <span>1 час назад</span>
                                 <span class="card-timer">
-                                    <span class="card-timer-icon">◷</span>
+                                    <span class="card-timer-icon">⏱</span>
                                     <span class="post-timer" data-end="120">2:00:00</span>
                                 </span>
                             </div>
@@ -225,19 +240,18 @@
             <div class="bottom-nav">
                 <div class="nav-item active" onclick="goToMainAndRefresh()">
                     <div class="nav-icon">◈</div>
-                    <div class="nav-label">Сейчас</div>
                 </div>
                 <div class="nav-item" data-screen="createScreen" onclick="showScreen('createScreen')">
                     <div class="nav-icon">+</div>
-                    <div class="nav-label">Создать</div>
                 </div>
-                <div class="nav-item">
-                    <div class="nav-icon">💬</div>
-                    <div class="nav-label">Чаты</div>
+                <div class="nav-item" data-screen="chatsScreen" onclick="openChatsScreen()">
+                    <div class="nav-icon-wrapper">
+                        <span>💬</span>
+                        <div class="nav-unread-dot" id="navUnreadDot" style="display: none;"></div>
+                    </div>
                 </div>
                 <div class="nav-item" data-screen="profileScreen" onclick="showScreen('profileScreen')">
                     <div class="nav-icon">👤</div>
-                    <div class="nav-label">Профиль</div>
                 </div>
             </div>
         </div>
@@ -328,7 +342,7 @@
                     <div class="menu-item-label">? Помощь</div>
                 </div>
                 <div class="menu-item" onclick="handleLogout()">
-                    <div class="menu-item-label" style="color: #ff4444;">◁ Выйти</div>
+                    <div class="menu-item-label" style="color: #ff4444;">● Выйти</div>
                 </div>
             </div>
         </div>
@@ -349,7 +363,7 @@
                         <div class="avatar-option" data-avatar="👤" onclick="selectAvatar('👤')">👤</div>
                         <div class="avatar-option" data-avatar="😊" onclick="selectAvatar('😊')">😊</div>
                         <div class="avatar-option" data-avatar="😎" onclick="selectAvatar('😎')">😎</div>
-                        <div class="avatar-option" data-avatar="🤗" onclick="selectAvatar('🤗')">🤗</div>
+                        <div class="avatar-option" data-avatar="🤓" onclick="selectAvatar('🤓')">🤓</div>
                         <div class="avatar-option" data-avatar="😇" onclick="selectAvatar('😇')">😇</div>
                         <div class="avatar-option" data-avatar="🥰" onclick="selectAvatar('🥰')">🥰</div>
                         <div class="avatar-option" data-avatar="😘" onclick="selectAvatar('😘')">😘</div>
@@ -391,6 +405,13 @@
                     <select class="edit-input edit-select" id="editCity">
                         <option value="">Выберите город</option>
                     </select>
+                </div>
+
+                <!-- Bio -->
+                <div class="edit-section">
+                    <label class="edit-label">О себе</label>
+                    <textarea class="edit-input edit-textarea" id="editBio" placeholder="Расскажите о себе..." maxlength="500"></textarea>
+                    <div class="edit-bio-hint"><span id="editBioCount">0</span>/500</div>
                 </div>
             </div>
         </div>
@@ -463,14 +484,132 @@
             </div>
         </div>
 
+        <!-- User Profile View Screen -->
+        <div class="screen user-profile-screen" id="userProfileScreen">
+            <div class="user-profile-back" onclick="closeUserProfile()">← Назад</div>
+            
+            <div class="user-profile-content">
+                <div class="user-profile-avatar" id="userProfileAvatar">👤</div>
+                <div class="user-profile-name" id="userProfileName">Имя</div>
+                <div class="user-profile-age-gender">
+                    <span id="userProfileAge">0</span> лет • <span id="userProfileGender">М</span>
+                </div>
+                <div class="user-profile-location" id="userProfileLocation">📍 Город</div>
+                <div class="user-profile-online" id="userProfileOnline">
+                    <span class="online-dot"></span> В сети
+                </div>
+                
+                <div class="user-profile-section">
+                    <div class="user-profile-section-header">
+                        <div class="user-profile-section-title">О себе</div>
+                        <div class="user-profile-edit-btn" id="editBioBtn" onclick="editBio()">✎</div>
+                    </div>
+                    <div class="user-profile-bio" id="userProfileBio">Пользователь пока ничего не написал о себе</div>
+                </div>
+                
+                <div class="user-profile-section">
+                    <div class="user-profile-section-title">Активные объявления</div>
+                    <div class="user-profile-posts" id="userProfilePosts">
+                        <!-- Posts will be loaded here -->
+                    </div>
+                </div>
+                
+                <div class="user-profile-actions">
+                    <button class="user-profile-btn user-profile-btn-chat" id="userProfileChatBtn" onclick="openChatWithUser()">
+                        💬 Написать сообщение
+                    </button>
+                    <button class="user-profile-btn user-profile-btn-report" id="userProfileReportBtn" onclick="reportUser()">
+                        ⚠ Пожаловаться
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chats List Screen -->
+        <div class="screen" id="chatsScreen">
+            <div class="chats-header">
+                <div class="chats-back" onclick="goToMainAndRefresh()">←</div>
+                <div class="chats-title">Сообщения</div>
+            </div>
+            <div class="chats-list" id="chatsList">
+                <!-- Чаты загружаются динамически -->
+            </div>
+            <div class="chats-empty" id="chatsEmpty" style="display: none;">
+                <div class="chats-empty-icon">💬</div>
+                <div class="chats-empty-text">Пока нет сообщений</div>
+                <div class="chats-empty-hint">Напишите кому-нибудь первым!</div>
+            </div>
+        </div>
+
+        <!-- Chat Screen -->
+        <div class="screen" id="chatScreen">
+            <div class="chat-header">
+                <div class="chat-back" onclick="closeChat()">←</div>
+                <div class="chat-user-info" onclick="openChatUserProfile()">
+                    <div class="chat-avatar" id="chatAvatar">👤</div>
+                    <div class="chat-user-details">
+                        <div class="chat-user-name" id="chatUserName">Имя</div>
+                        <div class="chat-user-status" id="chatUserStatus">В сети</div>
+                    </div>
+                </div>
+                <div class="chat-menu" onclick="showChatMenu()">⋮</div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Сообщения загружаются динамически -->
+            </div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Сообщение..." maxlength="1000">
+                <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+
     <!-- Menu Overlay -->
     <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+    <!-- Chat Menu Popup -->
+    <div class="menu-popup" id="chatMenuPopup">
+        <div class="menu-popup-header">Действия</div>
+        <div class="menu-popup-item" onclick="reportChatUser()">⚠ Пожаловаться</div>
+        <div class="menu-popup-item" id="blockUserBtn" onclick="blockChatUser()">🚫 Заблокировать</div>
+        <div class="menu-popup-item" style="color: #ff4444;" onclick="deleteChat()">🗑 Удалить чат</div>
+        <div class="menu-popup-cancel" onclick="closeChatMenu()">Отмена</div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div class="modal-overlay" id="postDetailModal" onclick="closePostDetail()">
+        <div class="post-detail-modal" onclick="event.stopPropagation()">
+            <div class="post-detail-user">
+                <div class="post-detail-avatar" id="postDetailAvatar">👤</div>
+                <div class="post-detail-user-info">
+                    <div class="post-detail-name" id="postDetailName">Имя</div>
+                    <div class="post-detail-age" id="postDetailAge">0 лет</div>
+                </div>
+                <div class="post-detail-close" onclick="closePostDetail()">✕</div>
+            </div>
+            <div class="post-detail-photo" id="postDetailPhoto"></div>
+            <div class="post-detail-text" id="postDetailText">Текст объявления</div>
+            <div class="post-detail-time" id="postDetailTime">Время</div>
+        </div>
+    </div>
+
+    <!-- Edit Bio Modal -->
+    <div class="modal-overlay" id="editBioModal">
+        <div class="edit-bio-modal">
+            <div class="edit-bio-title">О себе</div>
+            <textarea class="edit-bio-textarea" id="editBioTextarea" placeholder="Расскажите о себе..." maxlength="500"></textarea>
+            <div class="edit-bio-counter"><span id="bioCharCount">0</span>/500</div>
+            <div class="edit-bio-buttons">
+                <button class="edit-bio-btn edit-bio-btn-cancel" onclick="closeEditBio()">Отмена</button>
+                <button class="edit-bio-btn edit-bio-btn-save" onclick="saveBio()">Сохранить</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Menu Popup -->
     <div class="menu-popup" id="menuPopup">
         <div class="menu-popup-header">Действия</div>
         <div class="menu-popup-item" id="deletePostItem" style="display: none; color: #ff4444;" onclick="deleteMyPost()">🗑 Удалить</div>
-        <div class="menu-popup-item" onclick="reportPost()">⚠ Пожаловаться</div>
+        <div class="menu-popup-item" onclick="reportPost()">⚠  Пожаловаться</div>
         <div class="menu-popup-cancel" onclick="closeMenu()">Отмена</div>
     </div>
 
@@ -556,6 +695,6 @@
             </div>
         </div>
     </div>
+    <script src="script.js?v=19"></script>
 </body>
-
 </html>

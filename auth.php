@@ -139,7 +139,7 @@ try {
             $password = $data['password'];
             
             // Получение пользователя
-            $sql = "SELECT id, username, password_hash, name, age, gender, birthdate, country, city, avatar 
+            $sql = "SELECT id, username, password_hash, name, age, gender, birthdate, country, city, avatar, role, bio 
                     FROM users WHERE username = :username";
             
             $stmt = $conn->prepare($sql);

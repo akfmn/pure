@@ -11,6 +11,7 @@ try {
         case 'GET':
             // Получение всех активных постов
             $filter = $_GET['filter'] ?? 'nearby';
+            $userId = $_GET['user_id'] ?? null;
             
             $sql = "SELECT 
                         p.id,
@@ -38,11 +39,21 @@ try {
                         DATE_FORMAT(p.expires_at, '%Y-%m-%dT%H:%i:%s') as expires_at_iso
                     FROM posts p
                     JOIN users u ON p.user_id = u.id
-                    WHERE p.expires_at > NOW()
-                    ORDER BY p.created_at DESC";
+                    WHERE p.expires_at > NOW()";
+            
+            // Фильтр по конкретному пользователю
+            if ($userId) {
+                $sql .= " AND p.user_id = :user_id";
+            }
+            
+            $sql .= " ORDER BY p.created_at DESC";
             
             $stmt = $conn->prepare($sql);
-            $stmt->execute();
+            if ($userId) {
+                $stmt->execute([':user_id' => $userId]);
+            } else {
+                $stmt->execute();
+            }
             $posts = $stmt->fetchAll();
             
             echo json_encode([

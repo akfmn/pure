@@ -10,9 +10,31 @@ try {
     switch($method) {
         case 'GET':
             // Получение информации о пользователе
-            $userId = $_GET['id'] ?? null;
+            $action = $_GET['action'] ?? null;
+            $userId = $_GET['id'] ?? $_GET['user_id'] ?? null;
             
-            if ($userId) {
+            if ($action === 'get_profile' && $userId) {
+                // Получение полного профиля пользователя
+                $sql = "SELECT id, name, age, gender, avatar, city, country, bio,
+                        TIMESTAMPDIFF(MINUTE, last_active, NOW()) as minutes_inactive
+                        FROM users WHERE id = :id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([':id' => $userId]);
+                $user = $stmt->fetch();
+                
+                if (!$user) {
+                    throw new Exception('User not found');
+                }
+                
+                // Определяем онлайн статус (активен в последние 5 минут)
+                $user['is_online'] = ($user['minutes_inactive'] !== null && $user['minutes_inactive'] <= 5);
+                unset($user['minutes_inactive']);
+                
+                echo json_encode([
+                    'success' => true,
+                    'user' => $user
+                ]);
+            } elseif ($userId) {
                 // Конкретный пользователь
                 $sql = "SELECT id, name, age, avatar, created_at FROM users WHERE id = :id";
                 $stmt = $conn->prepare($sql);
@@ -183,6 +205,10 @@ try {
             if (isset($data['longitude'])) {
                 $updates[] = "longitude = :longitude";
                 $params[':longitude'] = $data['longitude'];
+            }
+            if (isset($data['bio'])) {
+                $updates[] = "bio = :bio";
+                $params[':bio'] = $data['bio'];
             }
             
             if (empty($updates)) {
